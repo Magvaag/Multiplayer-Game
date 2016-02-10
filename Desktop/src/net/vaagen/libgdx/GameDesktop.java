@@ -9,17 +9,12 @@ import net.vaagen.game.Game;
  */
 public class GameDesktop {
 
-    public static String VERSION = "Pre-Alpha v0.002";
-    private static boolean upToDate = true;
-
     public static void main(String[] args) {
-        new LwjglApplication(new Game(), "Libgdx Game #1!", 1280, 720);
-    }
+        // Workaround for : Pixel format not accelerated
+        // https://github.com/libgdx/libgdx/issues/997
 
-    private static void keepGameUpdated() {
-        String latestVersion = DownloaderUtil.getLatestVersion();
-        if (!latestVersion.equals(VERSION))
-            upToDate = false;
+        System.setProperty("org.lwjgl.opengl.Display.allowSoftwareOpenGL", "true");
+        new LwjglApplication(new Game(), "Multiplayer Game! -Magnus Morud Våågen, February 2k16", 1280, 720);
     }
 
 }

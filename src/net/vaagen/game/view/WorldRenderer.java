@@ -40,8 +40,8 @@ public class WorldRenderer {
     private boolean debug = false;
     private int width;
     private int height;
-    private float ppuX;	// pixels per unit on the X axis
-    private float ppuY;	// pixels per unit on the Y axis
+    //private float ppuX;	// pixels per unit on the X axis
+    //private float ppuY;	// pixels per unit on the Y axis
 
     public WorldRenderer(World world, boolean debug) {
         this.world = world;
@@ -59,7 +59,6 @@ public class WorldRenderer {
     }
 
     public void render() {
-
         float camX = world.getPlayer().getPosition().x;
         if (camX < CAMERA_WIDTH / 2)
             camX = CAMERA_WIDTH / 2;
@@ -138,8 +137,8 @@ public class WorldRenderer {
     public void setSize (int w, int h) {
         this.width = w;
         this.height = h;
-        ppuX = (float)width / CAMERA_WIDTH;
-        ppuY = (float)height / CAMERA_HEIGHT;
+        //ppuX = (float)width / CAMERA_WIDTH;
+        //ppuY = (float)height / CAMERA_HEIGHT;
     }
     public boolean isDebug() {
         return debug;

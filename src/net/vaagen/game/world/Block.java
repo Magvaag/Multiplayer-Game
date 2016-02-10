@@ -49,4 +49,7 @@ public class Block {
         return bounds;
     }
 
+    public int getId() {
+        return id;
+    }
 }

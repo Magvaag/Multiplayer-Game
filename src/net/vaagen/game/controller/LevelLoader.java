@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.world.Block;
 import net.vaagen.game.world.Grass;
 import net.vaagen.game.world.Level;
+import net.vaagen.game.world.World;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class LevelLoader {
     private static final int    EMPTY           = 0xffffff; // white
     private static final int    START_POS       = 0x0000ff; // blue
 
-    public static Level loadLevel(int number) {
+    public static Level loadLevel(World world, int number) {
         Level level = new Level();
 
         // Loading the png into a Pixmap
@@ -63,60 +64,35 @@ public class LevelLoader {
 
         applyGrass(grasses, 2, 1, 7);
         applyGrass(grasses, 14, 1, 5);
+        applyGrass(grasses, 7, 5, 2);
+        applyGrass(grasses, 9, 6, 1);
+        applyGrass(grasses, 1, 8, 4);
+        applyGrass(grasses, 15, 8, 4);
+        applyGrass(grasses, 1, 4, 1);
 
         level.setGrass(grasses);
 
+        level.setWorld(world);
         return level;
     }
 
     private static void applyGrass(Grass[][][] grasses, int startX, int startY, int length) {
         addGrass(grasses, startX, startY, 1);
         addGrass(grasses, startX, startY, 0);
-        addGrass(grasses, startX, startY, 2.5F, 1, 3);
-        addGrass(grasses, startX, startY, 2.5F, 1, 2);
+        if (length > 1) {
+            addGrass(grasses, startX, startY, startX + 0.5F, startY, 3);
+            addGrass(grasses, startX, startY, startX + 0.5F, startY, 2);
 
-        for (int x = startX + 1; x < startX + length - 1; x++) {
-            addGrass(grasses, x, startY, 3);
-            addGrass(grasses, x, startY, 2);
-            addGrass(grasses, x, startY, x + 0.5F, startY, 3);
-            addGrass(grasses, x, startY, x + 0.5F, startY, 2);
+            for (int x = startX + 1; x < startX + length - 1; x++) {
+                addGrass(grasses, x, startY, 3);
+                addGrass(grasses, x, startY, 2);
+                addGrass(grasses, x, startY, x + 0.5F, startY, 3);
+                addGrass(grasses, x, startY, x + 0.5F, startY, 2);
+            }
+
+            addGrass(grasses, startX + length - 1, startY, 5);
+            addGrass(grasses, startX + length - 1, startY, 4);
         }
-
-        addGrass(grasses, startX + length - 1, startY, 5);
-        addGrass(grasses, startX + length - 1, startY, 4);
-
-        /*addGrass(grasses, 2, 1, 1);
-        addGrass(grasses, 2, 1, 0);
-        addGrass(grasses, 2, 1, 2.5F, 1, 3);
-        addGrass(grasses, 2, 1, 2.5F, 1, 2);
-
-        addGrass(grasses, 3, 1, 3);
-        addGrass(grasses, 3, 1, 2);
-        addGrass(grasses, 3, 1, 3.5F, 1, 3);
-        addGrass(grasses, 3, 1, 3.5F, 1, 2);
-
-        addGrass(grasses, 4, 1, 3);
-        addGrass(grasses, 4, 1, 2);
-        addGrass(grasses, 4, 1, 4.5F, 1, 3);
-        addGrass(grasses, 4, 1, 4.5F, 1, 2);
-
-        addGrass(grasses, 5, 1, 3);
-        addGrass(grasses, 5, 1, 2);
-        addGrass(grasses, 5, 1, 5.5F, 1, 3);
-        addGrass(grasses, 5, 1, 5.5F, 1, 2);
-
-        addGrass(grasses, 6, 1, 3);
-        addGrass(grasses, 6, 1, 2);
-        addGrass(grasses, 6, 1, 6.5F, 1, 3);
-        addGrass(grasses, 6, 1, 6.5F, 1, 2);
-
-        addGrass(grasses, 7, 1, 3);
-        addGrass(grasses, 7, 1, 2);
-        addGrass(grasses, 7, 1, 7.5F, 1, 3);
-        addGrass(grasses, 7, 1, 7.5F, 1, 2);
-
-        addGrass(grasses, 8, 1, 5);
-        addGrass(grasses, 8, 1, 4);*/
     }
 
     private static void addGrass(Grass[][][] grasses, int x, int y, float realX, float realY, int type) {

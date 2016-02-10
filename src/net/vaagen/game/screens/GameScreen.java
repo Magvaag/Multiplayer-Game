@@ -27,6 +27,8 @@ public class GameScreen implements Screen, InputProcessor {
     Mesh mesh;
     Texture texture;
     Matrix4 matrix = new Matrix4();
+    Vector3 axis = new Vector3(0, 0, 1);
+    float angle = 0;
 
     @Override
     public void show() {
@@ -35,9 +37,6 @@ public class GameScreen implements Screen, InputProcessor {
         controller = new PlayerController(world);
         Gdx.input.setInputProcessor(this);
     }
-
-    Vector3 axis = new Vector3(0, 0, 1);
-    float angle = 0;
 
     @Override
     public void render(float delta) {
@@ -86,6 +85,8 @@ public class GameScreen implements Screen, InputProcessor {
             controller.rightPressed();
         if (PlayerController.Keys.JUMP.getInputKey().contains(keycode))
             controller.jumpPressed();
+        if (PlayerController.Keys.SLIDE.getInputKey().contains(keycode))
+            controller.slidePressed();
         if (PlayerController.Keys.FIRE.getInputKey().contains(keycode))
             controller.firePressed();
         return true;
@@ -99,6 +100,8 @@ public class GameScreen implements Screen, InputProcessor {
             controller.rightReleased();
         if (PlayerController.Keys.JUMP.getInputKey().contains(keycode))
             controller.jumpReleased();
+        if (PlayerController.Keys.SLIDE.getInputKey().contains(keycode))
+            controller.slideReleased();
         if (PlayerController.Keys.FIRE.getInputKey().contains(keycode))
             controller.fireReleased();
         if (keycode == Input.Keys.D) // Debug

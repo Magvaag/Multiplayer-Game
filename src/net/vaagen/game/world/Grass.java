@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.view.WorldRenderer;
 
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -17,7 +18,6 @@ import java.util.Random;
  */
 public class Grass {
 
-    public static final float SIZE = 1f;
     private static TextureRegion[] grassTextures = new TextureRegion[16];
 
     private int id;
@@ -30,6 +30,7 @@ public class Grass {
 
     private float[] vertex;
 
+    private World world;
     private Random random;
     private ShaderProgram shader;
     private Mesh mesh;
@@ -42,30 +43,10 @@ public class Grass {
         this.random = new Random();
         this.vertex = new float[24];
         grassAcceleration.set(-0.002F * (new Random().nextFloat() - 0.5F), 0);
-        String vertexShader = "attribute vec4 a_position;    \n" + "attribute vec4 a_color;\n" + "attribute vec2 a_texCoord0;\n"
-                + "uniform mat4 u_worldView;\n" + "varying vec4 v_color;" + "varying vec2 v_texCoords;"
-                + "void main()                  \n" + "{                            \n" + "   v_color = vec4(1, 1, 1, 1); \n"
-                + "   v_texCoords = a_texCoord0; \n" + "   gl_Position =  u_worldView * a_position;  \n"
-                + "}                            \n";
-        String fragmentShader = "#ifdef GL_ES\n" + "precision mediump float;\n" + "#endif\n" + "varying vec4 v_color;\n"
-                + "varying vec2 v_texCoords;\n" + "uniform sampler2D u_texture;\n" + "void main()                                  \n"
-                + "{                                            \n" + "  gl_FragColor = v_color * texture2D(u_texture, v_texCoords);\n"
-                + "}";
 
-        shader = new ShaderProgram(vertexShader, fragmentShader);
-        if (shader.isCompiled() == false) {
-            Gdx.app.log("ShaderTest", shader.getLog());
-            Gdx.app.exit();
-        }
-
+        setupShader();
         mesh = new Mesh(false, vertex.length, 0, new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
                 new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_color"), VertexAttribute.TexCoords(0));
-        /*mesh.setVertices(new float[] {
-                -2f, -1f, 0, Color.toFloatBits(255, 1, 1, 255), 0, 1,
-                2f, -1f, 0, Color.toFloatBits(255, 1, 1, 255), 1, 1,
-                2f, 1f, 0, Color.toFloatBits(255, 1, 1, 255), 1, 0,
-                -1f, 1f, 0, Color.toFloatBits(255, 1, 1, 255), 0, 0});*/
-        //mesh.setIndices(new short[] {0, 1, 2, 3});
     }
 
     public static void loadTextures() {
@@ -81,6 +62,40 @@ public class Grass {
 
     public void render(SpriteBatch spriteBatch) {
         drawGrass(spriteBatch);
+    }
+
+    public void update() {
+        grassVelocity.add(grassAcceleration);
+        topGrassPosition.add(grassVelocity);
+
+        float range = 2F;
+        List<Grass> grassList = world.getGrassInRangeWithId(getPosition().x, getPosition().y, range, id);
+        float totalAccelerationSway = 0;
+        for (Grass grass : grassList) {
+            float dx = getPosition().x - grass.getPosition().x;
+            float dy = getPosition().y - grass.getPosition().y;
+
+            float distance = (float) Math.sqrt(dx * dx + dy * dy);
+            totalAccelerationSway += grass.getGrassVelocity().x * (distance * distance / range / range);
+        }
+
+        grassAcceleration.add(totalAccelerationSway / 1000, 0);
+
+        // Calculate the acceleration of the grass
+        float maxGrassPoint = 0.08F + random.nextFloat() * 0.05F;
+        float accelerationAtTurn = 0.0002F * (random.nextFloat() * 0.5F + 0.5F);
+        float maxVelocity = 0.003F;
+        float recoveryAcceleration = 0.000001F;
+
+        if (topGrassPosition.x < -maxGrassPoint)
+            grassAcceleration.set(accelerationAtTurn, 0);
+        else if (topGrassPosition.x > maxGrassPoint)
+            grassAcceleration.set(-accelerationAtTurn, 0);
+
+        if (grassVelocity.x < -maxVelocity && grassAcceleration.x < 0)
+            grassAcceleration.set(recoveryAcceleration, 0);
+        if (grassVelocity.x > maxVelocity && grassAcceleration.x > 0)
+            grassAcceleration.set(-recoveryAcceleration, 0);
     }
 
     private static int currentVertex = 0;
@@ -132,28 +147,38 @@ public class Grass {
         currentVertex = 0;
     }
 
-    public void update() {
-        grassVelocity.add(grassAcceleration);
-        topGrassPosition.add(grassVelocity);
-
-        float maxGrassPoint = 0.08F + random.nextFloat() * 0.05F;
-        float accelerationAtTurn = 0.0002F * (random.nextFloat() * 0.5F + 0.5F);
-        float maxVelocity = 0.003F;
-        float recoveryAcceleration = 0.000001F;
-
-        if (topGrassPosition.x < -maxGrassPoint)
-            grassAcceleration.set(accelerationAtTurn, 0);
-        else if (topGrassPosition.x > maxGrassPoint)
-            grassAcceleration.set(-accelerationAtTurn, 0);
-
-        if (grassVelocity.x < -maxVelocity && grassAcceleration.x < 0)
-            grassAcceleration.set(recoveryAcceleration, 0);
-        if (grassVelocity.x > maxVelocity && grassAcceleration.x > 0)
-            grassAcceleration.set(-recoveryAcceleration, 0);
-    }
-
     public Vector2 getPosition() {
         return position;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public Vector2 getGrassVelocity() {
+        return grassVelocity;
+    }
+
+    public void setWorld(World world) {
+        this.world = world;
+    }
+
+    private void setupShader() {
+        String vertexShader = "attribute vec4 a_position;    \n" + "attribute vec4 a_color;\n" + "attribute vec2 a_texCoord0;\n"
+                + "uniform mat4 u_worldView;\n" + "varying vec4 v_color;" + "varying vec2 v_texCoords;"
+                + "void main()                  \n" + "{                            \n" + "   v_color = vec4(1, 1, 1, 1); \n"
+                + "   v_texCoords = a_texCoord0; \n" + "   gl_Position =  u_worldView * a_position;  \n"
+                + "}                            \n";
+        String fragmentShader = "#ifdef GL_ES\n" + "precision mediump float;\n" + "#endif\n" + "varying vec4 v_color;\n"
+                + "varying vec2 v_texCoords;\n" + "uniform sampler2D u_texture;\n" + "void main()                                  \n"
+                + "{                                            \n" + "  gl_FragColor = v_color * texture2D(u_texture, v_texCoords);\n"
+                + "}";
+
+        shader = new ShaderProgram(vertexShader, fragmentShader);
+        if (shader.isCompiled() == false) {
+            Gdx.app.log("ShaderTest", shader.getLog());
+            Gdx.app.exit();
+        }
     }
 
 }

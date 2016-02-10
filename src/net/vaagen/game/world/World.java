@@ -41,7 +41,7 @@ public class World {
     /** Return only the blocks that need to be drawn **/
     public List<Block> getDrawableBlocks(int width, int height) {
         int x = (int)player.getPosition().x - width;
-        int y = (int)player.getPosition().y - height;
+        int y = (int)player.getPosition().y - height - 1;
         if (x < 0) {
             x = 0;
         }
@@ -106,13 +106,32 @@ public class World {
         return grasses;
     }
 
+    public List<Grass> getGrassInRangeWithId(float x, float y, float range, int id) {
+        List<Grass> grassList = new ArrayList<>();
+
+        // Has to be on the same y-level, so no need looping through that
+        for (int x2 = (int)(x - Math.ceil(range)); x2 <= x + Math.ceil(range); x2++) {
+            if (x2 < 0 || x2 >= level.getWidth())
+                continue;
+
+            Grass[] grasses = level.getGrass()[x2][(int)y];
+            for (Grass g : grasses) {
+                if (g != null && g.getId() == id) {
+                    grassList.add(g);
+                }
+            }
+        }
+
+        return grassList;
+    }
+
     // --------------------
     public World() {
         createWorld();
     }
 
     private void createWorld() {
-        level = LevelLoader.loadLevel(2);
+        level = LevelLoader.loadLevel(this, 2);
         player = new Player(level.getSpanPosition());
     }
 

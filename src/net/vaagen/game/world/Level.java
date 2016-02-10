@@ -47,11 +47,22 @@ public class Level {
         this.blocks = blocks;
     }
 
-    public Level() {
-        loadDemoLevel();
+    public void setWorld(World world) {
+        // Currently only for grass
+        for (int x = 0; x < grass.length; x++) {
+            for (int y = 0; y < grass[0].length; y++) {
+                for (int z = 0; z < grass[0][0].length; z++) {
+                    if (grass[x][y][z] != null)
+                        grass[x][y][z].setWorld(world);
+                }
+            }
+        }
     }
 
     public Block get(int x, int y) {
+        if (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())
+            return null;
+
         return blocks[x][y];
     }
 
@@ -61,34 +72,6 @@ public class Level {
 
     public void setSpanPosition(Vector2 spanPosition) {
         this.spanPosition = spanPosition;
-    }
-
-    @Deprecated
-    private void loadDemoLevel() {
-        width = 10;
-        height = 7;
-        blocks = new Block[width][height];
-        for (int col = 0; col < width; col++) {
-            for (int row = 0; row < height; row++) {
-                blocks[col][row] = null;
-            }
-        }
-/*
-        for (int col = 0; col < 10; col++) {
-            blocks[col][0] = new Block(new Vector2(col, 0));
-            blocks[col][6] = new Block(new Vector2(col, 6));
-            if (col > 2) {
-                blocks[col][1] = new Block(new Vector2(col, 1));
-            }
-        }
-        blocks[9][2] = new Block(new Vector2(9, 2));
-        blocks[9][3] = new Block(new Vector2(9, 3));
-        blocks[9][4] = new Block(new Vector2(9, 4));
-        blocks[9][5] = new Block(new Vector2(9, 5));
-
-        blocks[6][3] = new Block(new Vector2(6, 3));
-        blocks[6][4] = new Block(new Vector2(6, 4));
-        blocks[6][5] = new Block(new Vector2(6, 5));*/
     }
 
 }
