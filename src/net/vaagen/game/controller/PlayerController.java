@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
+import net.vaagen.game.Game;
 import net.vaagen.game.world.Block;
 import net.vaagen.game.world.World;
 import net.vaagen.game.world.entity.Player;
@@ -46,11 +47,11 @@ public class PlayerController {
     private static final float WALL_SLIDE_JUMP_BOOST = 1.25F;
     private static final float MAX_VEL 			= 7f;
 
-    private World world;
-    private Player player;
+    private World   world;
+    private Player  player;
     private long	jumpPressedTime;
     private boolean jumpingPressed;
-    private long wallSlideMoveDisabledTime;
+    private long    wallSlideMoveDisabledTime;
     private boolean grounded = false;
 
     // This is the rectangle pool used in collision detection
@@ -62,21 +63,22 @@ public class PlayerController {
         }
     };
 
-    static Map<Keys, Boolean> keys = new HashMap<Keys, Boolean>();
+    static Map<Keys, Boolean> keys = new HashMap();
     static {
         keys.put(Keys.LEFT, false);
         keys.put(Keys.RIGHT, false);
         keys.put(Keys.JUMP, false);
         keys.put(Keys.SLIDE, false);
         keys.put(Keys.FIRE, false);
-    };
+    }
 
     // Blocks that Player can collide with any given frame
     private Array<Block> collidable = new Array<Block>();
 
     public PlayerController(World world) {
+        this.player = new Player();
         this.world = world;
-        this.player = world.getPlayer();
+        this.world.addPlayer(player);
     }
 
     // ** Key presses and touches **************** //
@@ -116,6 +118,10 @@ public class PlayerController {
 
     /** The main update method **/
     public void update(float delta) {
+        Vector2 prevPosition = player.getPosition().cpy();
+        String prevState = player.getState().name();
+
+
         // Processing the input - setting the states of Player
         processInput();
 
@@ -162,6 +168,11 @@ public class PlayerController {
         if (player.getVelocity().x < -MAX_VEL) {
             player.getVelocity().x = -MAX_VEL;
         }
+
+        if (!prevPosition.equals(player.getPosition()))
+            Game.gameScreen.getClient().sendMovePackage();
+        if (!prevState.equals(player.getState().name()))
+            Game.gameScreen.getClient().sendStatePackage();
 
         // simply updates the state time
         player.update(delta);
@@ -417,5 +428,9 @@ public class PlayerController {
 
     public boolean canWallSlideJump() {
         return player.getWallSlideTime() > PlayerController.WALL_SLIDE_MAX_JUMP_TIME;
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 }

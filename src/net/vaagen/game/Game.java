@@ -7,9 +7,12 @@ import net.vaagen.game.screens.GameScreen;
  */
 public class Game extends com.badlogic.gdx.Game {
 
+    public static GameScreen gameScreen;
+
     @Override
     public void create() {
-        setScreen(new GameScreen());
+        gameScreen = new GameScreen();
+        setScreen(gameScreen);
     }
 
 }

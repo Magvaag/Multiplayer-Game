@@ -1,6 +1,7 @@
 package net.vaagen.game.world;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import net.vaagen.game.controller.LevelLoader;
 import net.vaagen.game.view.WorldRenderer;
@@ -14,17 +15,25 @@ import java.util.List;
  */
 public class World {
 
-    /** Our player controlled hero **/
-    Player player;
+    List<Player> playerList;
     /** A world has a level through which Player needs to go through **/
     Level level;
+    Vector2 spawnPosition;
 
     /** The collision boxes **/
     Array<Rectangle> collisionRects = new Array<Rectangle>();
 
     public void update() {
-        for (Grass grass : getDrawableGrass((int)Math.ceil(WorldRenderer.CAMERA_WIDTH), (int)Math.ceil(WorldRenderer.CAMERA_HEIGHT)))
-            grass.update();
+        Grass[][][] grasses = level.getGrass();
+        for (int x = 0; x < grasses.length; x++) {
+            for (int y = 0; y < grasses[x].length; y++) {
+                for (int z = 0; z < grasses[x][y].length; z++) {
+                    Grass grass = grasses[x][y][z];
+                    if (grass != null)
+                        grass.update();
+                }
+            }
+        }
     }
 
     // Getters -----------
@@ -32,14 +41,12 @@ public class World {
     public Array<Rectangle> getCollisionRects() {
         return collisionRects;
     }
-    public Player getPlayer() {
-        return player;
-    }
     public Level getLevel() {
         return level;
     }
+
     /** Return only the blocks that need to be drawn **/
-    public List<Block> getDrawableBlocks(int width, int height) {
+    public List<Block> getDrawableBlocks(Player player, int width, int height) {
         int x = (int)player.getPosition().x - width;
         int y = (int)player.getPosition().y - height - 1;
         if (x < 0) {
@@ -72,7 +79,7 @@ public class World {
     }
 
     /** Return only the blocks that need to be drawn **/
-    public List<Grass> getDrawableGrass(int width, int height) {
+    public List<Grass> getDrawableGrass(Player player, int width, int height) {
         int x = (int)player.getPosition().x - width;
         int y = (int)player.getPosition().y - height;
         if (x < 0) {
@@ -130,9 +137,29 @@ public class World {
         createWorld();
     }
 
+    public void addPlayer(Player player) {
+        playerList.add(player);
+        player.setPosition(spawnPosition.cpy());
+    }
+
+    public List<Player> getPlayerList() {
+        return playerList;
+    }
+
+    public Player getPlayerFromId(int id) {
+        for (Player player : playerList) {
+            //System.out.println("I found a player with the id of " + player.getPlayerId() + ", but it is not " + id + " like you searched for..");
+            if (player.getPlayerId() == id)
+                return player;
+        }
+
+        return null;
+    }
+
     private void createWorld() {
         level = LevelLoader.loadLevel(this, 2);
-        player = new Player(level.getSpanPosition());
+        playerList = new ArrayList<>();
+        spawnPosition = level.getSpanPosition();
     }
 
 }

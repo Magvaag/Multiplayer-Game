@@ -71,7 +71,6 @@ public class LevelLoader {
         applyGrass(grasses, 1, 4, 1);
 
         level.setGrass(grasses);
-
         level.setWorld(world);
         return level;
     }

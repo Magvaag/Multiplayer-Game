@@ -20,31 +20,32 @@ public class Player {
     public static final float SIZE = 0.8F; // half a unit
 
     /** Textures **/
-    private TextureRegion idleLeft;
-    private TextureRegion idleRight;
+    private static TextureRegion idleLeft;
+    private static TextureRegion idleRight;
 
     /** Animations **/
-    private Animation idleRightAnimation;
-    private Animation idleLeftAnimation;
-    private Animation runningRightAnimation;
-    private Animation runningLeftAnimation;
-    private Animation slidingRightAnimation;
-    private Animation slidingLeftAnimation;
-    private Animation wallSlidingRightAnimation;
-    private Animation wallSlidingLeftAnimation;
+    private static Animation idleRightAnimation;
+    private static Animation idleLeftAnimation;
+    private static Animation runningRightAnimation;
+    private static Animation runningLeftAnimation;
+    private static Animation slidingRightAnimation;
+    private static Animation slidingLeftAnimation;
+    private static Animation wallSlidingRightAnimation;
+    private static Animation wallSlidingLeftAnimation;
 
-    Vector2 position = new Vector2();
+    Vector2     position = new Vector2();
     Vector2 	acceleration = new Vector2();
     Vector2 	velocity = new Vector2();
-    Rectangle bounds = new Rectangle();
+    Rectangle   bounds = new Rectangle();
     State		state = State.IDLE;
     boolean		facingLeft = true;
     float		stateTime = 0;
     boolean		longJump = false;
     float       wallSlideTime = 0;
+    int         playerId;
 
-    public Player(Vector2 position) {
-        this.position = position;
+    public Player() {
+        this.position = new Vector2(0, 0);
         this.bounds.x = position.x;
         this.bounds.y = position.y;
         this.bounds.height = SIZE - 1/16F;
@@ -53,7 +54,7 @@ public class Player {
         setFacingLeft(false);
     }
 
-    public void loadTextures() {
+    public static void loadTextures() {
         (idleLeft = new TextureRegion(new Texture("images/player.png"))).flip(true, false);
         idleRight = new TextureRegion(new Texture("images/player.png"));
         TextureRegion playerIdleAnimationAtlas = new TextureRegion(new Texture("images/player_idle_animation.png"));
@@ -150,12 +151,8 @@ public class Player {
     public void setState(State newState) {
         if (!this.state.equals(newState)) {
             // If you just started wall sliding, reset the timer
-            if (newState.equals(State.WALL_SLIDE)) {
+            if (newState.equals(State.WALL_SLIDE))
                 wallSlideTime = 0;
-                System.out.println("Reseting wallslide tiem!");
-            } else if (newState.equals(State.JUMPING)) {
-                System.out.println("JUMPING!");
-            }
 
             this.state = newState;
             this.stateTime = 0;
@@ -189,6 +186,10 @@ public class Player {
     }
     public float getWallSlideTime() {
         return wallSlideTime;
+    }
+
+    public void setPlayerId(int playerId) {
+        this.playerId = playerId;
     }
 
     public void render(SpriteBatch spriteBatch) {
@@ -225,6 +226,10 @@ public class Player {
             bounds.width = SIZE / 2;
             bounds.height = SIZE;
         }
+    }
+
+    public int getPlayerId() {
+        return playerId;
     }
 
     public void update(float delta) {

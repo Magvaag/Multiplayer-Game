@@ -9,14 +9,17 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import net.vaagen.game.controller.PlayerController;
+import net.vaagen.game.multiplayer.Client;
 import net.vaagen.game.view.WorldRenderer;
 import net.vaagen.game.world.World;
+import net.vaagen.game.world.entity.Player;
 
 /**
  * Created by Magnus on 2/6/2016.
  */
 public class GameScreen implements Screen, InputProcessor {
 
+    private Client client;
     private World world;
     private WorldRenderer renderer;
     private PlayerController controller;
@@ -33,9 +36,10 @@ public class GameScreen implements Screen, InputProcessor {
     @Override
     public void show() {
         world = new World();
-        renderer = new WorldRenderer(world, false);
         controller = new PlayerController(world);
+        renderer = new WorldRenderer(world, false);
         Gdx.input.setInputProcessor(this);
+        client = new Client("127.0.0.1", 13338);
     }
 
     @Override
@@ -157,5 +161,21 @@ public class GameScreen implements Screen, InputProcessor {
     public boolean mouseMoved(int screenX, int screenY) {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public PlayerController getController() {
+        return controller;
+    }
+
+    public Player getPlayer() {
+        return controller.getPlayer();
+    }
+
+    public World getWorld() {
+        return world;
     }
 }

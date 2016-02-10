@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import net.vaagen.game.Game;
 import net.vaagen.game.world.Block;
 import net.vaagen.game.world.Grass;
 import net.vaagen.game.world.World;
@@ -53,19 +54,19 @@ public class WorldRenderer {
     }
 
     private void loadTextures() {
-        world.getPlayer().loadTextures();
+        Game.gameScreen.getPlayer().loadTextures();
         Block.loadTextures();
         Grass.loadTextures();
     }
 
     public void render() {
-        float camX = world.getPlayer().getPosition().x;
+        float camX = Game.gameScreen.getPlayer().getPosition().x;
         if (camX < CAMERA_WIDTH / 2)
             camX = CAMERA_WIDTH / 2;
         else if (camX > world.getLevel().getWidth() - CAMERA_WIDTH / 2)
             camX = world.getLevel().getWidth() - CAMERA_WIDTH / 2;
 
-        float camY = world.getPlayer().getPosition().y;
+        float camY = Game.gameScreen.getPlayer().getPosition().y;
         if (camY < CAMERA_HEIGHT / 2)
             camY = CAMERA_HEIGHT / 2;
         else if (camY > world.getLevel().getHeight() - CAMERA_HEIGHT / 2)
@@ -86,14 +87,16 @@ public class WorldRenderer {
     }
 
     private void drawBlocks() {
-        for (Block block : world.getDrawableBlocks((int)CAMERA_WIDTH, (int)CAMERA_HEIGHT)) {
+        for (Block block : world.getDrawableBlocks(Game.gameScreen.getPlayer(), (int)CAMERA_WIDTH, (int)CAMERA_HEIGHT)) {
             block.render(spriteBatch);
         }
     }
 
     private void drawPlayers() {
         // Implies that I want more players!
-        world.getPlayer().render(spriteBatch);
+        for (Player player : world.getPlayerList()) {
+            player.render(spriteBatch);
+        }
     }
 
     private void drawGrass() {
@@ -101,7 +104,7 @@ public class WorldRenderer {
         Gdx.gl20.glEnable(GL20.GL_BLEND);
         Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
-        for (Grass grass : world.getDrawableGrass((int)CAMERA_WIDTH, (int)CAMERA_HEIGHT))
+        for (Grass grass : world.getDrawableGrass(Game.gameScreen.getPlayer(), (int)CAMERA_WIDTH, (int)CAMERA_HEIGHT))
             grass.render(spriteBatch);
     }
 
@@ -109,14 +112,14 @@ public class WorldRenderer {
         // render blocks
         debugRenderer.setProjectionMatrix(cam.combined);
         debugRenderer.begin(ShapeType.Line);
-        for (Block block : world.getDrawableBlocks((int)CAMERA_WIDTH, (int)CAMERA_HEIGHT)) {
+        for (Block block : world.getDrawableBlocks(Game.gameScreen.getPlayer(), (int)CAMERA_WIDTH, (int)CAMERA_HEIGHT)) {
             Rectangle rect = block.getBounds();
             debugRenderer.setColor(new Color(1, 0, 0, 1));
             debugRenderer.rect(rect.x, rect.y, rect.width, rect.height);
         }
         // render Player
-        Player bob = world.getPlayer();
-        Rectangle rect = bob.getBounds();
+        Player player = Game.gameScreen.getPlayer();
+        Rectangle rect = player.getBounds();
         debugRenderer.setColor(new Color(0, 1, 0, 1));
         debugRenderer.rect(rect.x, rect.y, rect.width, rect.height);
         debugRenderer.end();
