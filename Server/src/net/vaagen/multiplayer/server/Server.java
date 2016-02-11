@@ -34,12 +34,8 @@ public class Server extends Thread {
 
             // Accept incoming transmissions
             while (true) {
-                System.out.println("Waiting for user to join ...");
-
-                // This will just wait
+                // This will just wait until a user connects
                 Socket clientSocket = serverSocket.accept();
-
-                System.out.println("User connected to server.");
                 new ServerSocketGameThread(clientSocket, gameRoom);
             }
         } catch (IOException e) {

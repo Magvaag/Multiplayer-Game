@@ -120,6 +120,7 @@ public class PlayerController {
     public void update(float delta) {
         Vector2 prevPosition = player.getPosition().cpy();
         String prevState = player.getState().name();
+        boolean prevFacingLeft = player.isFacingLeft();
 
         // Processing the input - setting the states of Player
         processInput();
@@ -168,13 +169,12 @@ public class PlayerController {
             player.getVelocity().x = -MAX_VEL;
         }
 
-        if (!prevPosition.equals(player.getPosition()))
-            Game.gameScreen.getClient().sendMovePackage();
-        if (!prevState.equals(player.getState().name()))
-            Game.gameScreen.getClient().sendStatePackage();
+        if (!prevPosition.equals(player.getPosition()) || !prevState.equals(player.getState().name()) || !(prevFacingLeft == player.isFacingLeft()))
+            Game.gameScreen.getClient().sendUpdatePackage();
 
-        // simply updates the state time
-        player.update(delta);
+        // simply updates the state time of all players
+        for (Player player : world.getPlayerList())
+            player.update(delta);
     }
 
     /** Collision checking **/

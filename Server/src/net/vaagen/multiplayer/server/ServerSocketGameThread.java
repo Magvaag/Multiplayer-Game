@@ -28,7 +28,6 @@ public class ServerSocketGameThread extends Thread {
 
     public void setGameRoom(ServerGameRoom gameRoom) {
         this.gameRoom = gameRoom;
-        System.out.println("Joined game room.");
     }
 
     public void sendPackageToClient(String sPackage) {
@@ -62,17 +61,15 @@ public class ServerSocketGameThread extends Thread {
             PrintStream outputStream = new PrintStream(socket.getOutputStream());
             outputStream.println("your-id:{" + playerId + "}");
 
-            System.out.println("Sending message to client about his id!");
-
             // Then we wait for confirmation
             BufferedReader inputStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            System.out.println(inputStream.readLine());
+            inputStream.readLine();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        System.out.println("");
         // Add the player to the game room
+        System.out.println("User " + playerId + " connected to the server.");
         gameRoom.addToRoom(this);
 
         try {
@@ -83,8 +80,8 @@ public class ServerSocketGameThread extends Thread {
                 gameRoom.sendPackageToAll(this, input);
             }
         } catch (IOException e) {
-            // TODO : User disconnected
-            e.printStackTrace();
+            gameRoom.playerDisconnect(this);
+            System.out.println("User " + playerId + " disconnected from the server.");
         }
     }
 

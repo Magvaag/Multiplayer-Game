@@ -7,6 +7,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.controller.PlayerController;
+import net.vaagen.game.world.Grass;
+import net.vaagen.game.world.World;
+
+import java.util.List;
 
 /**
  * Created by Magnus on 2/6/2016.
@@ -33,6 +37,7 @@ public class Player {
     private static Animation wallSlidingRightAnimation;
     private static Animation wallSlidingLeftAnimation;
 
+    World       world;
     Vector2     position = new Vector2();
     Vector2 	acceleration = new Vector2();
     Vector2 	velocity = new Vector2();
@@ -187,9 +192,14 @@ public class Player {
     public float getWallSlideTime() {
         return wallSlideTime;
     }
-
     public void setPlayerId(int playerId) {
         this.playerId = playerId;
+    }
+    public void respawn(World world) {
+        this.world = world;
+        getVelocity().x = 0;
+        getVelocity().y = 0;
+        setPosition(world.getLevel().getSpanPosition().cpy());
     }
 
     public void render(SpriteBatch spriteBatch) {
@@ -236,6 +246,21 @@ public class Player {
         stateTime += delta;
         if (getState().equals(State.WALL_SLIDE))
             wallSlideTime += delta;
+
+        float range = 1.5F;
+        List<Grass> grassList = world.getGrassInRange(getPosition().x, getPosition().y, range);
+        for (Grass grass : grassList) {
+            float dx = getPosition().x - grass.getPosition().x;
+            float dy = getPosition().y - grass.getPosition().y;
+
+            float distance = (float) Math.sqrt(dx * dx + dy * dy);
+            float dDistance = range - distance;
+            if (dDistance < 0)
+                continue;
+
+            float appliedVelocity = getVelocity().x + getVelocity().y;
+            grass.applyAngularVelocity(-appliedVelocity / 50 * dDistance);
+        }
     }
 
 }

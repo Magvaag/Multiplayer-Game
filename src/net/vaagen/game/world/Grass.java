@@ -24,9 +24,12 @@ public class Grass {
 
     Vector2 position = new Vector2();
 
-    Vector2 topGrassPosition = new Vector2();
-    Vector2 grassVelocity = new Vector2();
-    Vector2 grassAcceleration = new Vector2();
+    float rotation; // Angle
+    float rotationVelocity; // Angular Velocity
+    //float rotationAcceleration; // Angular Acceleration
+    //Vector2 topGrassPosition = new Vector2();
+    //Vector2 grassVelocity = new Vector2();
+    //Vector2 grassAcceleration = new Vector2();
 
     private float[] vertex;
 
@@ -42,7 +45,7 @@ public class Grass {
         this.id = id;
         this.random = new Random();
         this.vertex = new float[24];
-        grassAcceleration.set(-0.002F * (new Random().nextFloat() - 0.5F), 0);
+        rotation = random.nextInt(10) - 5;
 
         setupShader();
         mesh = new Mesh(false, vertex.length, 0, new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
@@ -65,10 +68,20 @@ public class Grass {
     }
 
     public void update() {
-        grassVelocity.add(grassAcceleration);
-        topGrassPosition.add(grassVelocity);
+        rotationVelocity += (random.nextFloat() - 0.5F) * 0.1F;
+        rotation += rotationVelocity;
+        if (rotation > 90) {
+            rotation = 90;
+            if (rotationVelocity > 5)
+                rotationVelocity = 5;
+        }
+        if (rotation < -90) {
+            rotation = -90;
+            if (rotationVelocity < -5)
+                rotationVelocity = -5;
+        }
 
-        float range = 2F;
+        float range = 1.5F;
         List<Grass> grassList = world.getGrassInRangeWithId(getPosition().x, getPosition().y, range, id);
         float totalAccelerationSway = 0;
         for (Grass grass : grassList) {
@@ -76,26 +89,20 @@ public class Grass {
             float dy = getPosition().y - grass.getPosition().y;
 
             float distance = (float) Math.sqrt(dx * dx + dy * dy);
-            totalAccelerationSway += grass.getGrassVelocity().x * (distance * distance / range / range);
+            totalAccelerationSway += grass.getGrassVelocity() * Math.sqrt(distance * distance / range / range);
         }
 
-        grassAcceleration.add(totalAccelerationSway / 1000, 0);
+        totalAccelerationSway /= grassList.size() * grassList.size() * grassList.size() * grassList.size()* grassList.size()*grassList.size()*grassList.size()*grassList.size();
+        rotationVelocity += totalAccelerationSway / 10000;
 
-        // Calculate the acceleration of the grass
-        float maxGrassPoint = 0.08F + random.nextFloat() * 0.05F;
-        float accelerationAtTurn = 0.0002F * (random.nextFloat() * 0.5F + 0.5F);
-        float maxVelocity = 0.003F;
-        float recoveryAcceleration = 0.000001F;
+        float newAcceleration = 0.1F * Math.abs(rotation) / 45;
+        if (rotation > 0.5F)
+            rotationVelocity -= newAcceleration;
+        if (rotation < 0.5F)
+            rotationVelocity += newAcceleration;
 
-        if (topGrassPosition.x < -maxGrassPoint)
-            grassAcceleration.set(accelerationAtTurn, 0);
-        else if (topGrassPosition.x > maxGrassPoint)
-            grassAcceleration.set(-accelerationAtTurn, 0);
-
-        if (grassVelocity.x < -maxVelocity && grassAcceleration.x < 0)
-            grassAcceleration.set(recoveryAcceleration, 0);
-        if (grassVelocity.x > maxVelocity && grassAcceleration.x > 0)
-            grassAcceleration.set(-recoveryAcceleration, 0);
+        // Removes more energy the farther away you are
+        rotationVelocity -= Math.signum(rotationVelocity) * Math.sqrt(Math.abs(rotationVelocity)) / 50;
     }
 
     private static int currentVertex = 0;
@@ -114,15 +121,15 @@ public class Grass {
         vertex[currentVertex++] = grassTextures[id].getU2();
         vertex[currentVertex++] = grassTextures[id].getV2();
 
-        vertex[currentVertex++] = 1 + topGrassPosition.x  + getPosition().x;
-        vertex[currentVertex++] = 1 + getPosition().y;
+        vertex[currentVertex++] = 1 + (float) (Math.cos(Math.toRadians(rotation + 90))) * 1.2F + getPosition().x;
+        vertex[currentVertex++] = 0 + (float) (Math.sin(Math.toRadians(rotation + 90))) + getPosition().y; // The sin() replaces the +1 at the beginning
         vertex[currentVertex++] = 0;
         vertex[currentVertex++] = Color.toFloatBits(255, 0, 0, 255);
         vertex[currentVertex++] = grassTextures[id].getU2();
         vertex[currentVertex++] = grassTextures[id].getV();
 
-        vertex[currentVertex++] = 0 + topGrassPosition.x + getPosition().x;
-        vertex[currentVertex++] = 1 + getPosition().y;
+        vertex[currentVertex++] = 0 + (float) (Math.cos(Math.toRadians(rotation + 90))) * 1.2F + getPosition().x;
+        vertex[currentVertex++] = 0 + (float) (Math.sin(Math.toRadians(rotation + 90))) + getPosition().y;
         vertex[currentVertex++] = 0;
         vertex[currentVertex++] = Color.toFloatBits(255, 0, 0, 255);
         vertex[currentVertex++] = grassTextures[id].getU();
@@ -130,6 +137,10 @@ public class Grass {
 
         // Flush at the end
         flush(spriteBatch);
+    }
+
+    public void applyAngularVelocity(float angularVelocity) {
+        this.rotationVelocity += angularVelocity;
     }
 
     private void flush(SpriteBatch spriteBatch) {
@@ -155,8 +166,8 @@ public class Grass {
         return id;
     }
 
-    public Vector2 getGrassVelocity() {
-        return grassVelocity;
+    public float getGrassVelocity() {
+        return rotationVelocity;
     }
 
     public void setWorld(World world) {

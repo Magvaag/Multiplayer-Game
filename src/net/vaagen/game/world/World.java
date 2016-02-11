@@ -9,6 +9,7 @@ import net.vaagen.game.world.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by Magnus on 2/6/2016.
@@ -18,7 +19,6 @@ public class World {
     List<Player> playerList;
     /** A world has a level through which Player needs to go through **/
     Level level;
-    Vector2 spawnPosition;
 
     /** The collision boxes **/
     Array<Rectangle> collisionRects = new Array<Rectangle>();
@@ -113,17 +113,29 @@ public class World {
         return grasses;
     }
 
+    public List<Grass> getGrassInRange(float x, float y, float range) {
+        return getGrassInRangeWithId(x, y, range, -1);
+    }
+
+    /**
+     * An ID of -1 can be used to check for grass without any specific id
+     * @param x
+     * @param y
+     * @param range
+     * @param id
+     * @return
+     */
     public List<Grass> getGrassInRangeWithId(float x, float y, float range, int id) {
         List<Grass> grassList = new ArrayList<>();
 
         // Has to be on the same y-level, so no need looping through that
         for (int x2 = (int)(x - Math.ceil(range)); x2 <= x + Math.ceil(range); x2++) {
-            if (x2 < 0 || x2 >= level.getWidth())
+            if (x2 < 0 || x2 >= level.getWidth() || y >= level.getGrass()[0].length)
                 continue;
 
             Grass[] grasses = level.getGrass()[x2][(int)y];
             for (Grass g : grasses) {
-                if (g != null && g.getId() == id) {
+                if (g != null && (id == -1 || g.getId() == id)) {
                     grassList.add(g);
                 }
             }
@@ -139,7 +151,15 @@ public class World {
 
     public void addPlayer(Player player) {
         playerList.add(player);
-        player.setPosition(spawnPosition.cpy());
+        player.respawn(this);
+    }
+
+    public void removePlayer(Player player) {
+        playerList.remove(player);
+    }
+
+    public void removePlayerFromId(int id) {
+        removePlayer(getPlayerFromId(id));
     }
 
     public List<Player> getPlayerList() {
@@ -158,8 +178,7 @@ public class World {
 
     private void createWorld() {
         level = LevelLoader.loadLevel(this, 2);
-        playerList = new ArrayList<>();
-        spawnPosition = level.getSpanPosition();
+        playerList = new CopyOnWriteArrayList<>();
     }
 
 }

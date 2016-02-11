@@ -26,13 +26,6 @@ public class GameScreen implements Screen, InputProcessor {
 
     private int width, height;
 
-    ShaderProgram shader;
-    Mesh mesh;
-    Texture texture;
-    Matrix4 matrix = new Matrix4();
-    Vector3 axis = new Vector3(0, 0, 1);
-    float angle = 0;
-
     @Override
     public void show() {
         world = new World();

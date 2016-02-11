@@ -27,16 +27,20 @@ public class ServerGameRoom {
 
                 // Send information about the players already on the server
                 sendJoinPackage(gameThread, thread);
-
-                // TODO : Send the new player information about player position!
             }
+            sendPackageToAll(thread, "get-player-info:{}"); // Just asks everyone, except the new guy, to send their data to the server
 
             // Add him to the list
             socketGameThreadList.add(thread);
 
-            System.out.println("Adding user to the game room! with the id " + thread.getPlayerId());
+            //System.out.println("Adding user to the game room! with the id " + thread.getPlayerId());
         } else
             System.out.println("User already in game room.");
+    }
+
+    public void playerDisconnect(ServerSocketGameThread thread) {
+        socketGameThreadList.remove(thread);
+        sendPackageToAll(thread, "player-disconnect:{" + thread.getPlayerId() + "}");
     }
 
     public int getGameRoomId() {
@@ -45,7 +49,6 @@ public class ServerGameRoom {
     }
 
     public void sendJoinPackage(ServerSocketGameThread sender, ServerSocketGameThread receiver) {
-        System.out.println("Sending, add player to id " + receiver.getPlayerId() + ", and the id I am sending is " + receiver.getPlayerId());
         receiver.sendPackageToClient("add-player:{" + sender.getPlayerId() + "}");
     }
 
