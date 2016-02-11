@@ -22,6 +22,7 @@ public class Client {
             @Override
             public void run() {
                 try {
+                    System.out.println("Connecting to \"" + serverIp + ":" + serverPort + "\"..");
                     socket = new Socket(serverIp, serverPort);
 
                     // We need to listen for incoming packages

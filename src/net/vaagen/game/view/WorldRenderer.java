@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.Game;
 import net.vaagen.game.world.Block;
+import net.vaagen.game.world.Bridge;
 import net.vaagen.game.world.Grass;
 import net.vaagen.game.world.World;
 import net.vaagen.game.world.entity.Player;
@@ -57,6 +58,7 @@ public class WorldRenderer {
         Game.gameScreen.getPlayer().loadTextures();
         Block.loadTextures();
         Grass.loadTextures();
+        Bridge.loadTextures();
     }
 
     public void render() {
@@ -67,10 +69,10 @@ public class WorldRenderer {
             camX = world.getLevel().getWidth() - CAMERA_WIDTH / 2;
 
         float camY = Game.gameScreen.getPlayer().getPosition().y;
-        if (camY < CAMERA_HEIGHT / 2)
+        /*if (camY < CAMERA_HEIGHT / 2)
             camY = CAMERA_HEIGHT / 2;
         else if (camY > world.getLevel().getHeight() - CAMERA_HEIGHT / 2)
-            camY = world.getLevel().getHeight() - CAMERA_HEIGHT / 2;
+            camY = world.getLevel().getHeight() - CAMERA_HEIGHT / 2;*/
 
         this.cam.position.set(camX, camY, 0);
         this.cam.update();
@@ -78,6 +80,7 @@ public class WorldRenderer {
         spriteBatch.begin();
         drawBlocks();
         drawPlayers();
+        drawBridges();
         spriteBatch.end();
         drawCollisionBlocks();
 
@@ -106,6 +109,11 @@ public class WorldRenderer {
 
         for (Grass grass : world.getDrawableGrass(Game.gameScreen.getPlayer(), (int)CAMERA_WIDTH, (int)CAMERA_HEIGHT))
             grass.render(spriteBatch);
+    }
+
+    private void drawBridges() {
+        for (Bridge bridge : world.getDrawableBridges(Game.gameScreen.getPlayer(), (int)CAMERA_WIDTH, (int)CAMERA_HEIGHT))
+            bridge.render(spriteBatch);
     }
 
     private void drawDebug() {

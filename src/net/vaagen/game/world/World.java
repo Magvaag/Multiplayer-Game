@@ -75,6 +75,10 @@ public class World {
             for (int row = y; row <= y2; row++) {
                 block = level.getBlocks()[col][row];
                 if (block != null) {
+                    //Block b = block;
+                    //if (row != (getLevel().getHeight()+row)%getLevel().getHeight()) {
+                    //    b = new Block(new Vector2(col, row), block.getId());
+                    //}
                     blocks.add(block);
                 }
             }
@@ -90,34 +94,75 @@ public class World {
             x = 0;
         }
 
-        if (y < 0) {
-            y = 0;
-        }
         int x2 = x + 2 * width;
         int y2 = y + 2 * height;
         if (x2 >= level.getWidth()) {
             x2 = level.getWidth() - 1;
         }
-        if (y2 >= level.getHeight()) {
+        /*if (y2 >= level.getHeight()) {
             y2 = level.getHeight() - 1;
             y = y2 - 2 * height;
             if (y < 0)
                 y = 0;
-        }
+        }*/
 
         List<Grass> grasses = new ArrayList();
         Grass[] grass;
         for (int col = x; col <= x2; col++) {
             for (int row = y; row <= y2; row++) {
-                grass = level.getGrass()[col][row];
+                grass = level.getGrass()[col][(row+getLevel().getHeight())%getLevel().getHeight()];
                 for (Grass g : grass) {
                     if (g != null) {
+                        //Grass g2 = g;
+                        //if (row != (getLevel().getHeight()+row)%getLevel().getHeight()) {
+                        /*    g2 = new Grass(new Vector2(g.getPosition().x, row), g.getId());
+                            g2.setRotation(g.getRotation());
+                            g2.setRotationVelocity(g.getRotationVelocity());
+                        }*/
                         grasses.add(g);
                     }
                 }
             }
         }
         return grasses;
+    }
+
+    /** Return only the blocks that need to be drawn **/
+    // TODO : Fix this fucking mess
+    public List<Bridge> getDrawableBridges(Player player, int width, int height) {
+        int x = (int)player.getPosition().x - width;
+        int y = (int)player.getPosition().y - height;
+        if (x < 0) {
+            x = 0;
+        }
+
+        int x2 = x + 2 * width;
+        int y2 = y + 2 * height;
+        if (x2 >= level.getWidth()) {
+            x2 = level.getWidth() - 1;
+        }
+        /*if (y2 >= level.getHeight()) {
+            y2 = level.getHeight() - 1;
+            y = y2 - 2 * height;
+            if (y < 0)
+                y = 0;
+        }*/
+
+        List<Bridge> bridges = new ArrayList();
+        Bridge bridge;
+        for (int col = x; col <= x2; col++) {
+            for (int row = y; row <= y2; row++) {
+                bridge = level.getBridges()[col][(getLevel().getHeight()+row)%getLevel().getHeight()];
+                if (bridge != null) {
+                    Bridge b = bridge;
+                    //if (row != (getLevel().getHeight()+row)%getLevel().getHeight()) {
+                    //    b = new Bridge(new Vector2(col, row));
+                    //}
+                    bridges.add(b);
+                }
+            }
+        }
+        return bridges;
     }
 
     public List<Grass> getGrassInRange(float x, float y, float range) {
@@ -137,7 +182,7 @@ public class World {
 
         // Has to be on the same y-level, so no need looping through that
         for (int x2 = (int)(x - Math.ceil(range)); x2 <= x + Math.ceil(range); x2++) {
-            if (x2 < 0 || x2 >= level.getWidth() || y >= level.getGrass()[0].length)
+            if (x2 < 0 || x2 >= level.getWidth() || (int)y < 0 || y >= level.getGrass()[0].length)
                 continue;
 
             Grass[] grasses = level.getGrass()[x2][(int)y];

@@ -237,6 +237,10 @@ public class PlayerController {
             player.getPosition().x -= world.getLevel().getWidth();
         if (player.getPosition().x < 0)
             player.getPosition().x += world.getLevel().getWidth();
+        if (player.getPosition().y > world.getLevel().getHeight())
+            player.getPosition().y -= world.getLevel().getHeight();
+        if (player.getPosition().y < 0)
+            player.getPosition().y += world.getLevel().getHeight();
 
         // un-scale velocity (not in frame time)
         player.getVelocity().scl(1 / delta);

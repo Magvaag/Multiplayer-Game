@@ -45,7 +45,7 @@ public class Server extends Thread {
 
     public static void main(String[] args) {
         // Creates a server with the specified port, and make a call to start the thread
-        Server server = new Server(13338, 10);
+        Server server = new Server(50001, 10);
         server.start();
     }
 

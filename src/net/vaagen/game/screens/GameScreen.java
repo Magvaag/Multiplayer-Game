@@ -32,7 +32,7 @@ public class GameScreen implements Screen, InputProcessor {
         controller = new PlayerController(world);
         renderer = new WorldRenderer(world, false);
         Gdx.input.setInputProcessor(this);
-        client = new Client("25.141.152.199", 13338); // 137.117.248.37 -> scratchforfun.net // 25.141.152.199 -> Hamatchi
+        client = new Client("137.117.248.37", 50001); // 137.117.248.37 -> scratchforfun.net // 25.141.152.199 -> Hamatchi
     }
 
     @Override

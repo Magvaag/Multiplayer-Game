@@ -219,13 +219,11 @@ public class Player {
         this.world = world;
         getVelocity().x = 0;
         getVelocity().y = 0;
-        setPosition(world.getLevel().getSpanPosition().cpy());
+        setPosition(world.getLevel().getSpawnPosition().cpy());
     }
 
     public void render(SpriteBatch spriteBatch) {
         TextureRegion frame;
-
-        //System.out.println(getPosition().x + ", " + getPosition().y);
 
         if (getState().equals(State.IDLE)) {
             frame = isFacingLeft() ? idleLeftAnimation.getKeyFrame(getStateTime(), true) : idleRightAnimation.getKeyFrame(getStateTime(), true);
@@ -239,9 +237,6 @@ public class Player {
             frame = isFacingLeft() ? fallLeftAnimation.getKeyFrame(getStateTime(), true) : fallRightAnimation.getKeyFrame(getStateTime(), true);
         } else
             frame = isFacingLeft() ? idleLeft : idleRight;
-
-        //if (getState().equals(State.SLIDING))
-        //    System.out.println("Sliding!");
 
         spriteBatch.draw(frame, getPosition().x, getPosition().y, Player.SIZE, Player.SIZE);
     }

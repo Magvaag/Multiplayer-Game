@@ -158,6 +158,22 @@ public class Grass {
         currentVertex = 0;
     }
 
+    public void setRotation(float rotation) {
+        this.rotation = rotation;
+    }
+
+    public float getRotation() {
+        return rotation;
+    }
+
+    public float getRotationVelocity() {
+        return rotationVelocity;
+    }
+
+    public void setRotationVelocity(float rotationVelocity) {
+        this.rotationVelocity = rotationVelocity;
+    }
+
     public Vector2 getPosition() {
         return position;
     }

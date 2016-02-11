@@ -3,10 +3,7 @@ package net.vaagen.game.controller;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Vector2;
-import net.vaagen.game.world.Block;
-import net.vaagen.game.world.Grass;
-import net.vaagen.game.world.Level;
-import net.vaagen.game.world.World;
+import net.vaagen.game.world.*;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -52,7 +49,7 @@ public class LevelLoader {
                     // adding a block
                     blocks[col][iRow] = new Block(new Vector2(col, iRow), new Color(pixel).getRed());
                 } else if (pixel == START_POS) {
-                    level.setSpanPosition(new Vector2(col, iRow));
+                    level.setSpawnPosition(new Vector2(col, iRow));
                 }
             }
         }
@@ -62,13 +59,23 @@ public class LevelLoader {
 
         Grass[][][] grasses = new Grass[blocks.length][blocks[0].length][4]; // Max three layers with grass :O
 
-        applyGrass(grasses, 2, 1, 7);
+        applyGrass(grasses, 6, 1, 3);
         applyGrass(grasses, 14, 1, 5);
         applyGrass(grasses, 7, 5, 2);
         applyGrass(grasses, 9, 6, 1);
         applyGrass(grasses, 1, 8, 4);
         applyGrass(grasses, 15, 8, 4);
         applyGrass(grasses, 1, 4, 1);
+
+        Bridge[][] bridges = new Bridge[blocks.length][blocks[0].length];
+        bridges[1][0] = new Bridge(new Vector2(1, 0));
+        bridges[2][0] = new Bridge(new Vector2(2, 0));
+        bridges[3][0] = new Bridge(new Vector2(3, 0));
+
+        bridges[16][0] = new Bridge(new Vector2(16, 0));
+        bridges[17][0] = new Bridge(new Vector2(17, 0));
+        bridges[18][0] = new Bridge(new Vector2(18, 0));
+        level.setBridges(bridges);
 
         level.setGrass(grasses);
         level.setWorld(world);

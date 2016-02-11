@@ -13,6 +13,7 @@ public class Level {
     private int height;
     private Block[][] blocks;
     private Grass[][][] grass;
+    private Bridge[][] bridges;
     private Vector2 spanPosition;
 
     public int getWidth() {
@@ -47,6 +48,14 @@ public class Level {
         this.blocks = blocks;
     }
 
+    public Bridge[][] getBridges() {
+        return bridges;
+    }
+
+    public void setBridges(Bridge[][] bridges) {
+        this.bridges = bridges;
+    }
+
     public void setWorld(World world) {
         // Currently only for grass
         for (int x = 0; x < grass.length; x++) {
@@ -66,11 +75,11 @@ public class Level {
         return blocks[x][y];
     }
 
-    public Vector2 getSpanPosition() {
+    public Vector2 getSpawnPosition() {
         return spanPosition;
     }
 
-    public void setSpanPosition(Vector2 spanPosition) {
+    public void setSpawnPosition(Vector2 spanPosition) {
         this.spanPosition = spanPosition;
     }
 
