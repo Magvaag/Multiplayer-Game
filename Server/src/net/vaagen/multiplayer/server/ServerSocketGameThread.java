@@ -83,6 +83,7 @@ public class ServerSocketGameThread extends Thread {
                 gameRoom.sendPackageToAll(this, input);
             }
         } catch (IOException e) {
+            // TODO : User disconnected
             e.printStackTrace();
         }
     }

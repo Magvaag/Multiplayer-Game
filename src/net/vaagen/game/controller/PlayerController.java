@@ -121,7 +121,6 @@ public class PlayerController {
         Vector2 prevPosition = player.getPosition().cpy();
         String prevState = player.getState().name();
 
-
         // Processing the input - setting the states of Player
         processInput();
 
@@ -229,6 +228,8 @@ public class PlayerController {
 
         // update Player's position
         player.getPosition().add(player.getVelocity());
+
+
         player.updateBounds();
 
         // Update the position

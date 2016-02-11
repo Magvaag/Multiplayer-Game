@@ -2,12 +2,9 @@ package net.vaagen.game.multiplayer;
 
 import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.Game;
-import net.vaagen.game.screens.GameScreen;
 import net.vaagen.game.world.entity.Player;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 
@@ -21,21 +18,28 @@ public class Client {
     private boolean hasReceivedId;
 
     public Client(String serverIp, int serverPort) {
-        System.out.println("Client created!");
-
         try {
-            System.out.println("Connecting to socket..");
             socket = new Socket(serverIp, serverPort);
-            System.out.println("Successfully connected to server!");
 
             // We need to listen for incoming packages
-            clientPackageListener = new ClientPackageListener(this, socket);
+            if (socket != null && socket.isConnected())
+                clientPackageListener = new ClientPackageListener(this, socket);
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            // This exception is printed out prettier out below
+        } finally {
+            if (socket != null && socket.isConnected())
+                System.out.println("Connection established on to \"" + serverIp + ":" + serverPort + "\"!");
+            else
+                System.out.println("Unable to connect to Game Server, playing offline.");
+            System.out.println();
         }
     }
 
     public void sendPackage(String input) {
+        if (socket == null || !socket.isConnected())
+            return;
+
         try {
             PrintStream inputStream = new PrintStream(socket.getOutputStream());
 
@@ -60,6 +64,9 @@ public class Client {
     }
 
     public void readPackage(String sPackage) {
+        if (socket == null || !socket.isConnected())
+            return;
+
         String[] args = sPackage.split(":");
         String action = args[0];
         String[] values = args[1].replace("{", "").replace("}", "").split(",");

@@ -39,13 +39,17 @@ public class GameScreen implements Screen, InputProcessor {
         controller = new PlayerController(world);
         renderer = new WorldRenderer(world, false);
         Gdx.input.setInputProcessor(this);
-        client = new Client("127.0.0.1", 13338);
+        client = new Client("25.141.152.199", 13338); // 137.117.248.37 -> scratchforfun.net // 25.141.152.199 -> Hamatchi
     }
 
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0.2353f, 0.9373f, 0.898f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        // Just setting the lowest fps possible, just to make sure the user doesn't clip through the ground / other objects
+        if (delta > 1F/20)
+            delta = 1F / 20;
 
         controller.update(delta);
         world.update();
