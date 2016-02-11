@@ -85,7 +85,7 @@ public class Grass {
         List<Grass> grassList = world.getGrassInRangeWithId(getPosition().x, getPosition().y, range, id);
         float totalAccelerationSway = 0;
         for (Grass grass : grassList) {
-            float dx = getPosition().x - grass.getPosition().x;
+            float dx = getPosition().x - grass.getPosition().x + Block.SIZE / 2;
             float dy = getPosition().y - grass.getPosition().y;
 
             float distance = (float) Math.sqrt(dx * dx + dy * dy);

@@ -1,7 +1,5 @@
 package net.vaagen.multiplayer.server;
 
-import net.vaagen.multiplayer.server.player.Player;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,7 +13,6 @@ public class ServerSocketGameThread extends Thread {
 
     private ServerGameRoom gameRoom;
     private Socket socket;
-    private Player player;
     private int playerId;
 
     public ServerSocketGameThread(Socket socket, ServerGameRoom gameRoom) {
@@ -47,10 +44,6 @@ public class ServerSocketGameThread extends Thread {
 
     public int getPlayerId() {
         return playerId;
-    }
-
-    public Player getPlayer() {
-        return player;
     }
 
     public void run() {

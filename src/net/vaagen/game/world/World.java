@@ -56,6 +56,7 @@ public class World {
         if (y < 0) {
             y = 0;
         }
+
         int x2 = x + 2 * width;
         int y2 = y + 2 * height;
         if (x2 >= level.getWidth()) {
@@ -63,6 +64,9 @@ public class World {
         }
         if (y2 >= level.getHeight()) {
             y2 = level.getHeight() - 1;
+            y = y2 - 2 * height;
+            if (y < 0)
+                y = 0;
         }
 
         List<Block> blocks = new ArrayList();
@@ -96,6 +100,9 @@ public class World {
         }
         if (y2 >= level.getHeight()) {
             y2 = level.getHeight() - 1;
+            y = y2 - 2 * height;
+            if (y < 0)
+                y = 0;
         }
 
         List<Grass> grasses = new ArrayList();

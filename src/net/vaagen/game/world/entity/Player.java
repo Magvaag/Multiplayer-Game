@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.controller.PlayerController;
+import net.vaagen.game.world.Block;
 import net.vaagen.game.world.Grass;
 import net.vaagen.game.world.World;
 
@@ -36,6 +37,8 @@ public class Player {
     private static Animation slidingLeftAnimation;
     private static Animation wallSlidingRightAnimation;
     private static Animation wallSlidingLeftAnimation;
+    private static Animation fallRightAnimation;
+    private static Animation fallLeftAnimation;
 
     World       world;
     Vector2     position = new Vector2();
@@ -131,6 +134,23 @@ public class Player {
             wallSlidingLeftFrames[i].flip(true, false);
         }
         wallSlidingLeftAnimation = new Animation(wallSlidingAnimationSpeed, wallSlidingLeftFrames);
+
+        float fallingAnimationSpeed = 0.25F;
+        TextureRegion playerFallingAnimationAtlas = new TextureRegion(new Texture("images/player_fall_animation.png"));
+        textureArray = playerFallingAnimationAtlas.split(16, 16);
+        TextureRegion[] fallingRightFrames = new TextureRegion[playerFallingAnimationAtlas.getRegionWidth() / 16 * playerFallingAnimationAtlas.getRegionHeight() / 16];
+        for (int i = 0; i < fallingRightFrames.length; i++) {
+            fallingRightFrames[i] = textureArray[0][i];
+        }
+        fallRightAnimation = new Animation(fallingAnimationSpeed, fallingRightFrames);
+        // This is necessary to keep the right and left apart // not clones of each other
+        textureArray = playerFallingAnimationAtlas.split(16, 16);
+        TextureRegion[] fallingLeftFrames = new TextureRegion[playerFallingAnimationAtlas.getRegionWidth() / 16 * playerFallingAnimationAtlas.getRegionHeight() / 16];
+        for (int i = 0; i < fallingLeftFrames.length; i++) {
+            fallingLeftFrames[i] = textureArray[0][i];
+            fallingLeftFrames[i].flip(true, false);
+        }
+        fallLeftAnimation = new Animation(fallingAnimationSpeed, fallingLeftFrames);
     }
     public boolean isFacingLeft() {
         return facingLeft;
@@ -215,6 +235,8 @@ public class Player {
             frame = isFacingLeft() ? slidingLeftAnimation.getKeyFrame(getStateTime(), true) : slidingRightAnimation.getKeyFrame(getStateTime(), true);
         } else if (getState().equals(State.WALL_SLIDE)) {
             frame = isFacingLeft() ? wallSlidingLeftAnimation.getKeyFrame(getStateTime(), true) : wallSlidingRightAnimation.getKeyFrame(getStateTime(), true);
+        } else if (getVelocity().y < 0) {
+            frame = isFacingLeft() ? fallLeftAnimation.getKeyFrame(getStateTime(), true) : fallRightAnimation.getKeyFrame(getStateTime(), true);
         } else
             frame = isFacingLeft() ? idleLeft : idleRight;
 
@@ -250,7 +272,7 @@ public class Player {
         float range = 1.5F;
         List<Grass> grassList = world.getGrassInRange(getPosition().x, getPosition().y, range);
         for (Grass grass : grassList) {
-            float dx = getPosition().x - grass.getPosition().x;
+            float dx = getPosition().x - grass.getPosition().x + Block.SIZE / 2;
             float dy = getPosition().y - grass.getPosition().y;
 
             float distance = (float) Math.sqrt(dx * dx + dy * dy);
