@@ -52,31 +52,35 @@ public class World {
         if (x < 0) {
             x = 0;
         }
-
+/*
         if (y < 0) {
             y = 0;
-        }
+        }*/
 
         int x2 = x + 2 * width;
         int y2 = y + 2 * height;
         if (x2 >= level.getWidth()) {
             x2 = level.getWidth() - 1;
-        }
+        }/*
         if (y2 >= level.getHeight()) {
             y2 = level.getHeight() - 1;
             y = y2 - 2 * height;
             if (y < 0)
                 y = 0;
-        }
+        }*/
 
         List<Block> blocks = new ArrayList();
         Block block;
         for (int col = x; col <= x2; col++) {
             for (int row = y; row <= y2; row++) {
-                block = level.getBlocks()[col][row];
+                block = level.getBlocks()[col][(row+getLevel().getHeight()) % getLevel().getHeight()];
                 if (block != null) {
+                    if (row >= getLevel().getHeight())
+                        block.setRenderLevel(1);
+                    if (row < 0)
+                        block.setRenderLevel(-1);
                     //Block b = block;
-                    //if (row != (getLevel().getHeight()+row)%getLevel().getHeight()) {
+                    //if () {
                     //    b = new Block(new Vector2(col, row), block.getId());
                     //}
                     blocks.add(block);
@@ -113,12 +117,10 @@ public class World {
                 grass = level.getGrass()[col][(row+getLevel().getHeight())%getLevel().getHeight()];
                 for (Grass g : grass) {
                     if (g != null) {
-                        //Grass g2 = g;
-                        //if (row != (getLevel().getHeight()+row)%getLevel().getHeight()) {
-                        /*    g2 = new Grass(new Vector2(g.getPosition().x, row), g.getId());
-                            g2.setRotation(g.getRotation());
-                            g2.setRotationVelocity(g.getRotationVelocity());
-                        }*/
+                        if (row >= getLevel().getHeight())
+                            g.setRenderLevel(1);
+                        if (row < 0)
+                            g.setRenderLevel(-1);
                         grasses.add(g);
                     }
                 }
@@ -155,9 +157,10 @@ public class World {
                 bridge = level.getBridges()[col][(getLevel().getHeight()+row)%getLevel().getHeight()];
                 if (bridge != null) {
                     Bridge b = bridge;
-                    //if (row != (getLevel().getHeight()+row)%getLevel().getHeight()) {
-                    //    b = new Bridge(new Vector2(col, row));
-                    //}
+                    if (row >= getLevel().getHeight())
+                        b.setRenderLevel(1);
+                    if (row < 0)
+                        b.setRenderLevel(-1);
                     bridges.add(b);
                 }
             }

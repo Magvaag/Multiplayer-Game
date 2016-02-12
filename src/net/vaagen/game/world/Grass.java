@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import net.vaagen.game.Game;
 import net.vaagen.game.view.WorldRenderer;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class Grass {
     //Vector2 grassAcceleration = new Vector2();
 
     private float[] vertex;
-
+    private int renderLevel; //if it should render above = 1, or below = -1
     private World world;
     private Random random;
     private ShaderProgram shader;
@@ -62,11 +63,13 @@ public class Grass {
             }
         }
     }
-
     public void render(SpriteBatch spriteBatch) {
-        drawGrass(spriteBatch);
+        drawGrass(spriteBatch, getPosition().x, getPosition().y);
+        if (renderLevel == 1)
+            drawGrass(spriteBatch, getPosition().x, getPosition().y + Game.gameScreen.getWorld().getLevel().getHeight());
+        if (renderLevel == -1)
+            drawGrass(spriteBatch, getPosition().x, getPosition().y - Game.gameScreen.getWorld().getLevel().getHeight());
     }
-
     public void update() {
         rotationVelocity += (random.nextFloat() - 0.5F) * 0.1F;
         rotation += rotationVelocity;
@@ -106,30 +109,30 @@ public class Grass {
     }
 
     private static int currentVertex = 0;
-    private void drawGrass(SpriteBatch spriteBatch) {
-        vertex[currentVertex++] = 0 + getPosition().x;
-        vertex[currentVertex++] = 0 + getPosition().y;
+    private void drawGrass(SpriteBatch spriteBatch, float x, float y) {
+        vertex[currentVertex++] = 0 + x;
+        vertex[currentVertex++] = 0 + y;
         vertex[currentVertex++] = 0;
         vertex[currentVertex++] = Color.toFloatBits(255, 1, 1, 255);
         vertex[currentVertex++] = grassTextures[id].getU();
         vertex[currentVertex++] = grassTextures[id].getV2();
 
-        vertex[currentVertex++] = 1 + getPosition().x;
-        vertex[currentVertex++] = 0 + getPosition().y;
+        vertex[currentVertex++] = 1 + x;
+        vertex[currentVertex++] = 0 + y;
         vertex[currentVertex++] = 0;
         vertex[currentVertex++] = Color.toFloatBits(255, 0, 0, 255);
         vertex[currentVertex++] = grassTextures[id].getU2();
         vertex[currentVertex++] = grassTextures[id].getV2();
 
-        vertex[currentVertex++] = 1 + (float) (Math.cos(Math.toRadians(rotation + 90))) * 1.2F + getPosition().x;
-        vertex[currentVertex++] = 0 + (float) (Math.sin(Math.toRadians(rotation + 90))) + getPosition().y; // The sin() replaces the +1 at the beginning
+        vertex[currentVertex++] = 1 + (float) (Math.cos(Math.toRadians(rotation + 90))) * 1.2F + x;
+        vertex[currentVertex++] = 0 + (float) (Math.sin(Math.toRadians(rotation + 90))) + y; // The sin() replaces the +1 at the beginning
         vertex[currentVertex++] = 0;
         vertex[currentVertex++] = Color.toFloatBits(255, 0, 0, 255);
         vertex[currentVertex++] = grassTextures[id].getU2();
         vertex[currentVertex++] = grassTextures[id].getV();
 
-        vertex[currentVertex++] = 0 + (float) (Math.cos(Math.toRadians(rotation + 90))) * 1.2F + getPosition().x;
-        vertex[currentVertex++] = 0 + (float) (Math.sin(Math.toRadians(rotation + 90))) + getPosition().y;
+        vertex[currentVertex++] = 0 + (float) (Math.cos(Math.toRadians(rotation + 90))) * 1.2F + x;
+        vertex[currentVertex++] = 0 + (float) (Math.sin(Math.toRadians(rotation + 90))) + y;
         vertex[currentVertex++] = 0;
         vertex[currentVertex++] = Color.toFloatBits(255, 0, 0, 255);
         vertex[currentVertex++] = grassTextures[id].getU();
@@ -161,35 +164,27 @@ public class Grass {
     public void setRotation(float rotation) {
         this.rotation = rotation;
     }
-
     public float getRotation() {
         return rotation;
     }
-
     public float getRotationVelocity() {
         return rotationVelocity;
     }
-
     public void setRotationVelocity(float rotationVelocity) {
         this.rotationVelocity = rotationVelocity;
     }
-
     public Vector2 getPosition() {
         return position;
     }
-
     public int getId() {
         return id;
     }
-
     public float getGrassVelocity() {
         return rotationVelocity;
     }
-
     public void setWorld(World world) {
         this.world = world;
     }
-
     private void setupShader() {
         String vertexShader = "attribute vec4 a_position;    \n" + "attribute vec4 a_color;\n" + "attribute vec2 a_texCoord0;\n"
                 + "uniform mat4 u_worldView;\n" + "varying vec4 v_color;" + "varying vec2 v_texCoords;"
@@ -206,6 +201,9 @@ public class Grass {
             Gdx.app.log("ShaderTest", shader.getLog());
             Gdx.app.exit();
         }
+    }
+    public void setRenderLevel(int renderLevel) {
+        this.renderLevel = renderLevel;
     }
 
 }

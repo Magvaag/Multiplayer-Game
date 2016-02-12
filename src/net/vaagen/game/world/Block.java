@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import net.vaagen.game.Game;
 
 /**
  * Created by Magnus on 10/15/2015.
@@ -14,6 +15,7 @@ public class Block {
     public static final float SIZE = 1f;
     private static TextureRegion[] blockTextures = new TextureRegion[256];
 
+    private int renderLevel; //if it should render above = 1, or below = -1
     private int id;
 
     Vector2 position = new Vector2();
@@ -40,6 +42,10 @@ public class Block {
 
     public void render(SpriteBatch spriteBatch) {
         spriteBatch.draw(blockTextures[id], getPosition().x, getPosition().y, Block.SIZE, Block.SIZE);
+        if (renderLevel == 1)
+            spriteBatch.draw(blockTextures[id], getPosition().x, getPosition().y + Game.gameScreen.getWorld().getLevel().getHeight(), Block.SIZE, Block.SIZE);
+        if (renderLevel == -1)
+            spriteBatch.draw(blockTextures[id], getPosition().x, getPosition().y - Game.gameScreen.getWorld().getLevel().getHeight(), Block.SIZE, Block.SIZE);
     }
 
     public Vector2 getPosition() {
@@ -48,7 +54,9 @@ public class Block {
     public Rectangle getBounds() {
         return bounds;
     }
-
+    public void setRenderLevel(int renderLevel) {
+        this.renderLevel = renderLevel;
+    }
     public int getId() {
         return id;
     }

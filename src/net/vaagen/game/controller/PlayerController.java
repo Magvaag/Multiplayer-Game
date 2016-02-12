@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import net.vaagen.game.Game;
 import net.vaagen.game.world.Block;
+import net.vaagen.game.world.Bridge;
 import net.vaagen.game.world.World;
 import net.vaagen.game.world.entity.Player;
 
@@ -73,7 +74,7 @@ public class PlayerController {
     }
 
     // Blocks that Player can collide with any given frame
-    private Array<Block> collidable = new Array<Block>();
+    private Array<Rectangle> collidable = new Array<Rectangle>();
 
     public PlayerController(World world) {
         this.player = new Player();
@@ -196,11 +197,11 @@ public class PlayerController {
         world.getCollisionRects().clear();
 
         // if player collides, make his horizontal velocity 0
-        for (Block block : collidable) {
-            if (block == null) continue;
-            if (playerRect.overlaps(block.getBounds())) {
+        for (Rectangle rectangle : collidable) {
+            if (rectangle == null) continue;
+            if (playerRect.overlaps(rectangle)) {
                 player.getVelocity().x = 0;
-                world.getCollisionRects().add(block.getBounds());
+                world.getCollisionRects().add(rectangle);
                 break;
             }
         }
@@ -212,14 +213,14 @@ public class PlayerController {
         populateVerticalCollidableBlocks();
         playerRect.y += player.getVelocity().y;
 
-        for (Block block : collidable) {
-            if (block == null) continue;
-            if (playerRect.overlaps(block.getBounds())) {
+        for (Rectangle rectangle : collidable) {
+            if (rectangle == null) continue;
+            if (playerRect.overlaps(rectangle)) {
                 if (player.getVelocity().y < 0) {
                     grounded = true;
                 }
                 player.getVelocity().y = 0;
-                world.getCollisionRects().add(block.getBounds());
+                world.getCollisionRects().add(rectangle);
                 break;
             }
         }
@@ -283,16 +284,23 @@ public class PlayerController {
         for (int x = startX; x <= endX; x++) {
             for (int y = startY; y <= endY; y++) {
                 if (x >= 0 && x < world.getLevel().getWidth() && y >=0 && y < world.getLevel().getHeight()) {
-                    collidable.add(world.getLevel().get(x, y));
+                    Block block = world.getLevel().get(x, y);
+                    if (block != null)
+                        collidable.add(block.getBounds());
+                    Bridge bridge = world.getLevel().getBridges()[x][y];
+                    if (bridge != null && player.getVelocity().y < 0) // TODO : Make sure the player is only colliding from above
+                        collidable.add(bridge.getBounds());
                 }
             }
         }
 
+
+        // This is for when you are moving from one edge of the screen to the other
         for (int y = startY; y <= endY; y++) {
             Block block = world.getLevel().get(world.getLevel().getWidth()-1, y); // Grab the last block in the row
             if (block != null) {
                 Block clone = new Block(new Vector2(-1, y), block.getId());
-                collidable.add(clone);
+                collidable.add(clone.getBounds());
             }
         }
 
@@ -300,7 +308,7 @@ public class PlayerController {
             Block block = world.getLevel().get(0, y); // Grab the last block in the row
             if (block != null) {
                 Block clone = new Block(new Vector2(world.getLevel().getWidth(), y), block.getId());
-                collidable.add(clone);
+                collidable.add(clone.getBounds());
             }
         }
     }

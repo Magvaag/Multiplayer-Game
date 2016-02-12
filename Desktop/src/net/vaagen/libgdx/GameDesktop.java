@@ -13,7 +13,7 @@ public class GameDesktop {
         // Workaround for : Pixel format not accelerated
         // https://github.com/libgdx/libgdx/issues/997
 
-        System.setProperty("org.lwjgl.opengl.Display.allowSoftwareOpenGL", "true");
+        //System.setProperty("org.lwjgl.opengl.Display.allowSoftwareOpenGL", "true");
         new LwjglApplication(new Game(), "Multiplayer Game! -Magnus Morud Våågen, February 2k16", 1280, 720);
     }
 
