@@ -13,11 +13,9 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.Game;
-import net.vaagen.game.world.Block;
-import net.vaagen.game.world.Bridge;
-import net.vaagen.game.world.Grass;
-import net.vaagen.game.world.World;
+import net.vaagen.game.world.*;
 import net.vaagen.game.world.entity.Player;
+import net.vaagen.game.world.projectile.Arrow;
 
 /**
  * Created by Magnus on 10/15/2015.
@@ -59,28 +57,20 @@ public class WorldRenderer {
         Block.loadTextures();
         Grass.loadTextures();
         Bridge.loadTextures();
+        Arrow.loadTextures();
+        Cloud.loadTextures();
     }
 
     public void render() {
-        float camX = Game.gameScreen.getPlayer().getPosition().x;
-        if (camX < CAMERA_WIDTH / 2)
-            camX = CAMERA_WIDTH / 2;
-        else if (camX > world.getLevel().getWidth() - CAMERA_WIDTH / 2)
-            camX = world.getLevel().getWidth() - CAMERA_WIDTH / 2;
-
-        float camY = Game.gameScreen.getPlayer().getPosition().y;
-        /*if (camY < CAMERA_HEIGHT / 2)
-            camY = CAMERA_HEIGHT / 2;
-        else if (camY > world.getLevel().getHeight() - CAMERA_HEIGHT / 2)
-            camY = world.getLevel().getHeight() - CAMERA_HEIGHT / 2;*/
-
-        this.cam.position.set(camX, camY, 0);
+        this.cam.position.set(getCameraXForPlayer(Game.gameScreen.getPlayer()), getCameraYForPlayer(Game.gameScreen.getPlayer()), 0);
         this.cam.update();
         spriteBatch.setProjectionMatrix(cam.combined);
         spriteBatch.begin();
+        drawClouds();
         drawBlocks();
         drawPlayers();
         drawBridges();
+        drawArrows();
         spriteBatch.end();
         drawCollisionBlocks();
 
@@ -116,6 +106,16 @@ public class WorldRenderer {
             bridge.render(spriteBatch);
     }
 
+    private void drawArrows() {
+        for (Arrow arrow : world.getProjectileList())
+            arrow.render(spriteBatch);
+    }
+
+    private void drawClouds() {
+        for (Cloud cloud : world.getCloudList())
+            cloud.render(spriteBatch);
+    }
+
     private void drawDebug() {
         // render blocks
         debugRenderer.setProjectionMatrix(cam.combined);
@@ -145,6 +145,25 @@ public class WorldRenderer {
         }
     }
 
+    public float getCameraXForPlayer(Player player) {
+        float camX = player.getPosition().x;
+        if (camX < CAMERA_WIDTH / 2)
+            camX = CAMERA_WIDTH / 2;
+        else if (camX > world.getLevel().getWidth() - CAMERA_WIDTH / 2)
+            camX = world.getLevel().getWidth() - CAMERA_WIDTH / 2;
+
+        return camX;
+    }
+
+    public float getCameraYForPlayer(Player player) {
+        float camY = player.getPosition().y;
+        /*if (camY < CAMERA_HEIGHT / 2)
+            camY = CAMERA_HEIGHT / 2;
+        else if (camY > world.getLevel().getHeight() - CAMERA_HEIGHT / 2)
+            camY = world.getLevel().getHeight() - CAMERA_HEIGHT / 2;*/
+        return camY;
+    }
+
     public void setSize (int w, int h) {
         this.width = w;
         this.height = h;
@@ -156,5 +175,9 @@ public class WorldRenderer {
     }
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+
+    public SpriteBatch getSpriteBatch() {
+        return spriteBatch;
     }
 }

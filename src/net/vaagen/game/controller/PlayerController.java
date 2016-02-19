@@ -8,13 +8,12 @@ import com.badlogic.gdx.utils.Pool;
 import net.vaagen.game.Game;
 import net.vaagen.game.world.Block;
 import net.vaagen.game.world.Bridge;
+import net.vaagen.game.world.Cloud;
 import net.vaagen.game.world.World;
 import net.vaagen.game.world.entity.Player;
+import net.vaagen.game.world.projectile.Arrow;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Magnus on 10/15/2015.
@@ -22,7 +21,7 @@ import java.util.Map;
 public class PlayerController {
 
     public enum Keys {
-        LEFT(Input.Keys.LEFT), RIGHT(Input.Keys.RIGHT), JUMP(Input.Keys.SPACE, Input.Keys.UP), SLIDE(Input.Keys.DOWN), FIRE(Input.Keys.Z);
+        LEFT(Input.Keys.LEFT, Input.Keys.A), RIGHT(Input.Keys.RIGHT, Input.Keys.D), JUMP(Input.Keys.SPACE, Input.Keys.UP, Input.Keys.W), SLIDE(Input.Keys.DOWN, Input.Keys.S), FIRE(Input.Keys.Z), DEBUG(Input.Keys.R);
 
         private List<Integer> inputKey;
         Keys(Integer... inputKey) {
@@ -36,7 +35,7 @@ public class PlayerController {
 
     private static final long LONG_JUMP_PRESS 	= 350l;
     private static final float ACCELERATION 	= 35f;
-    private static final float GRAVITY 			= -27f;
+    public static final float GRAVITY 			= -27f;
     private static final float MAX_JUMP_SPEED	= 9f;
     private static final float GROUND_DAMP = 0.89f;
     private static final float AIR_DAMP = 0.96f;
@@ -44,9 +43,9 @@ public class PlayerController {
     private static final float AIR_SLIDING_DAMP = 0.994f;
     private static final float WALL_SLIDE_DAMP = 0.87F;
     private static final float WALL_SLIDE_KICK_OFF = 200F;
-    private static final float WALL_SLIDE_MAX_JUMP_TIME = 0.1F;
+    private static final float WALL_SLIDE_MAX_JUMP_TIME = 0.04F;
     private static final float WALL_SLIDE_JUMP_BOOST = 1.25F;
-    private static final float MAX_VEL 			= 7f;
+    private static final float MAX_VEL 			= 9f;
 
     private World   world;
     private Player  player;
@@ -54,6 +53,7 @@ public class PlayerController {
     private boolean jumpingPressed;
     private long    wallSlideMoveDisabledTime;
     private boolean grounded = false;
+    private float nextCloud = 0;
 
     // This is the rectangle pool used in collision detection
     // Good to avoid instantiation each frame
@@ -97,7 +97,7 @@ public class PlayerController {
         keys.get(keys.put(Keys.SLIDE, true));
     }
     public void firePressed() {
-        keys.get(keys.put(Keys.FIRE, false));
+        keys.get(keys.put(Keys.FIRE, true));
     }
 
     public void leftReleased() {
@@ -176,6 +176,19 @@ public class PlayerController {
         // simply updates the state time of all players
         for (Player player : world.getPlayerList())
             player.update(delta);
+        for (Arrow arrow : world.getProjectileList())
+            arrow.update(delta);
+        for (Cloud cloud : world.getCloudList()) {
+            cloud.update(delta);
+            if (cloud.isDead())
+                world.getCloudList().remove(cloud);
+        }
+        nextCloud += new Random().nextFloat()*delta;
+        int amountOfClouds = (int)(nextCloud / 10F);
+        for (int c = 0; c < amountOfClouds; c++) {
+            nextCloud -= 10;
+            world.addCloud(new Cloud(new Vector2(-4, new Random().nextFloat() * Game.gameScreen.getWorld().getLevel().getHeight()), new Vector2(0.04F + new Random().nextFloat() * 0.2F, (new Random().nextFloat()-0.5F) * 0.01F)));
+        }
     }
 
     /** Collision checking **/
@@ -213,6 +226,7 @@ public class PlayerController {
         populateVerticalCollidableBlocks();
         playerRect.y += player.getVelocity().y;
 
+        grounded = false;
         for (Rectangle rectangle : collidable) {
             if (rectangle == null) continue;
             if (playerRect.overlaps(rectangle)) {
@@ -238,15 +252,19 @@ public class PlayerController {
             player.getPosition().x -= world.getLevel().getWidth();
         if (player.getPosition().x < 0)
             player.getPosition().x += world.getLevel().getWidth();
-        if (player.getPosition().y > world.getLevel().getHeight())
+        if (player.getPosition().y > world.getLevel().getHeight()) {
             player.getPosition().y -= world.getLevel().getHeight();
-        if (player.getPosition().y < 0)
+            for (Cloud cloud : world.getCloudList())
+                cloud.updatePosition(world.getLevel().getHeight() * -0.9F);
+        } if (player.getPosition().y < 0) {
             player.getPosition().y += world.getLevel().getHeight();
+            for (Cloud cloud : world.getCloudList())
+                cloud.updatePosition(world.getLevel().getHeight() * 0.9F);
+        }
 
         // un-scale velocity (not in frame time)
         player.getVelocity().scl(1 / delta);
     }
-
     private void populateHorizontalCollidableBlocks(Rectangle rectangle) {
         // we first check the movement on the horizontal X axis
         int startX, endX;
@@ -263,7 +281,6 @@ public class PlayerController {
         // get the block(s) player can collide with
         populateCollidableBlocks(startX, startY, endX, endY);
     }
-
     private void populateVerticalCollidableBlocks() {
         // the same thing but on the vertical Y axis
         int startY, endY;
@@ -277,7 +294,6 @@ public class PlayerController {
 
         populateCollidableBlocks(startX, startY, endX, endY);
     }
-
     /** populate the collidable array with the blocks found in the enclosing coordinates **/
     private void populateCollidableBlocks(int startX, int startY, int endX, int endY) {
         collidable.clear();
@@ -288,12 +304,11 @@ public class PlayerController {
                     if (block != null)
                         collidable.add(block.getBounds());
                     Bridge bridge = world.getLevel().getBridges()[x][y];
-                    if (bridge != null && player.getVelocity().y < 0) // TODO : Make sure the player is only colliding from above
+                    if (bridge != null && player.getVelocity().y < 0 && player.getPosition().y + 0.05F > bridge.getBounds().y + bridge.getBounds().height) // TODO : Make sure the player is only colliding from above
                         collidable.add(bridge.getBounds());
                 }
             }
         }
-
 
         // This is for when you are moving from one edge of the screen to the other
         for (int y = startY; y <= endY; y++) {
@@ -311,11 +326,47 @@ public class PlayerController {
                 collidable.add(clone.getBounds());
             }
         }
+
+        // This is for when you are moving from one edge of the screen to the other
+        for (int x = startX; x <= endX; x++) {
+            Block block = world.getLevel().get(x, 0); // Grab the last block in the row
+            if (block != null) {
+                Block clone = new Block(new Vector2(x, world.getLevel().getHeight()), block.getId());
+                collidable.add(clone.getBounds());
+            }
+        }
+
+        /*for (int y = startY; y <= endY; y++) {
+            Block block = world.getLevel().get(0, y); // Grab the last block in the row
+            if (block != null) {
+                Block clone = new Block(new Vector2(world.getLevel().getWidth(), y), block.getId());
+                collidable.add(clone.getBounds());
+            }
+        }*/
+    }
+    private List<Bridge> getBridgeCollidables(int startX, int startY, int endX, int endY) {
+        List<Bridge> collidableBridges = new ArrayList<>();
+        for (int x = startX; x <= endX; x++) {
+            for (int y = startY; y <= endY; y++) {
+                if (x >= 0 && x < world.getLevel().getWidth() && y >=0 && y < world.getLevel().getHeight()) {
+                    Bridge bridge = world.getLevel().getBridges()[x][y];
+                    if (bridge != null && player.getVelocity().y <= 0 && player.getPosition().y + 0.05F > bridge.getBounds().y + bridge.getBounds().height)
+                        collidableBridges.add(bridge);
+                }
+            }
+        }
+
+        return collidableBridges;
     }
 
     /** Change Player's state and parameters based on input controls **/
     private boolean processInput() {
         boolean activeInput = false; // If we actually did anything
+        if (keys.get(Keys.FIRE)) {
+            world.addArrow(new Arrow(player.getPlayerId(), player.getPosition().cpy().add((player.isFacingLeft() ? 0 : player.getBounds().width), 0), new Vector2((player.isFacingLeft() ? -1 : 1) * 40, 1F)));
+            fireReleased();
+        }
+
         boolean onGroundReadyToJump = (grounded || jumpingPressed);
         if (keys.get(Keys.JUMP) && !player.getState().equals(Player.State.SLIDING) && (onGroundReadyToJump || (player.getState().equals(Player.State.WALL_SLIDE) && canWallSlideJump()))) {
             boolean wallSliding = player.getState().equals(Player.State.WALL_SLIDE);
@@ -329,6 +380,7 @@ public class PlayerController {
                     player.getAcceleration().x += WALL_SLIDE_KICK_OFF;
                     player.getPosition().x += 0.1F;
                 }
+                player.setFacingLeft(player.isFacingLeft());
             }
 
             if (!player.getState().equals(Player.State.JUMPING)) {
@@ -426,7 +478,28 @@ public class PlayerController {
         }
 
         if (keys.get(Keys.SLIDE)) {
-            player.setState(Player.State.SLIDING);
+            boolean fallThroughBridge = false;
+            if (player.getVelocity().y <= 0) {
+                int startY, endY;
+                int startX = (int) player.getBounds().x;
+                int endX = (int) (player.getBounds().x + player.getBounds().width);
+                startY = endY = (int) Math.floor(player.getBounds().y + player.getVelocity().y) - 1;
+                for (Bridge bridge : getBridgeCollidables(startX, startY, endX, endY)) {
+                    boolean leftBridge = ((int)bridge.getPosition().x - 1) >= 0 ? Game.gameScreen.getWorld().getLevel().get((int)bridge.getPosition().x - 1, (int)bridge.getPosition().y) == null : false;
+                    boolean rightBridge = ((int)bridge.getPosition().x + 1) < Game.gameScreen.getWorld().getLevel().getWidth() ? Game.gameScreen.getWorld().getLevel().get((int)bridge.getPosition().x + 1, (int)bridge.getPosition().y) == null : false;
+                    if ((bridge.getBounds().x < player.getBounds().x || leftBridge) && (bridge.getBounds().x + bridge.getBounds().width > player.getBounds().x + player.getBounds().width || rightBridge)) {
+                        fallThroughBridge = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!fallThroughBridge) {
+                player.setState(Player.State.SLIDING);
+            } else {
+                player.getPosition().y -= 0.5F;
+                player.setState(Player.State.IDLE);
+            }
             activeInput = true;
         }
 

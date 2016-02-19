@@ -10,7 +10,7 @@ import net.vaagen.game.Game;
 public class GameDesktop {
 
     public static void main(String[] args) {
-        // Workaround for : Pixel format not accelerated
+        // Workaround for : Pixel format not accelerated, not working
         // https://github.com/libgdx/libgdx/issues/997
 
         //System.setProperty("org.lwjgl.opengl.Display.allowSoftwareOpenGL", "true");

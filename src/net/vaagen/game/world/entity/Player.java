@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.controller.PlayerController;
+import net.vaagen.game.view.WorldRenderer;
 import net.vaagen.game.world.Block;
 import net.vaagen.game.world.Grass;
 import net.vaagen.game.world.World;
@@ -225,20 +226,22 @@ public class Player {
     public void render(SpriteBatch spriteBatch) {
         TextureRegion frame;
 
-        if (getState().equals(State.IDLE)) {
-            frame = isFacingLeft() ? idleLeftAnimation.getKeyFrame(getStateTime(), true) : idleRightAnimation.getKeyFrame(getStateTime(), true);
-        } else if (getState().equals(State.WALKING)) {
+        if (getState().equals(State.WALKING)) {
             frame = isFacingLeft() ? runningLeftAnimation.getKeyFrame(getStateTime(), true) : runningRightAnimation.getKeyFrame(getStateTime(), true);
         } else if (getState().equals(State.SLIDING)) {
             frame = isFacingLeft() ? slidingLeftAnimation.getKeyFrame(getStateTime(), true) : slidingRightAnimation.getKeyFrame(getStateTime(), true);
         } else if (getState().equals(State.WALL_SLIDE)) {
             frame = isFacingLeft() ? wallSlidingLeftAnimation.getKeyFrame(getStateTime(), true) : wallSlidingRightAnimation.getKeyFrame(getStateTime(), true);
-        } else if (getVelocity().y < 0) {
+        } else if (getVelocity().y < -1F) { // Falling
             frame = isFacingLeft() ? fallLeftAnimation.getKeyFrame(getStateTime(), true) : fallRightAnimation.getKeyFrame(getStateTime(), true);
+        } else if (getState().equals(State.IDLE)) {
+            frame = isFacingLeft() ? idleLeftAnimation.getKeyFrame(getStateTime(), true) : idleRightAnimation.getKeyFrame(getStateTime(), true);
         } else
             frame = isFacingLeft() ? idleLeft : idleRight;
 
         spriteBatch.draw(frame, getPosition().x, getPosition().y, Player.SIZE, Player.SIZE);
+        spriteBatch.draw(frame, getPosition().x, getPosition().y + world.getLevel().getHeight(), Player.SIZE, Player.SIZE);
+        spriteBatch.draw(frame, getPosition().x, getPosition().y - world.getLevel().getHeight(), Player.SIZE, Player.SIZE);
     }
 
     public void updateBounds() {

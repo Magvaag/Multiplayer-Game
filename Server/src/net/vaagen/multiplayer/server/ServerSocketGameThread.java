@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.sql.Time;
 
 /**
  * Created by Magnus on 2/10/2016.
@@ -62,7 +63,7 @@ public class ServerSocketGameThread extends Thread {
         }
 
         // Add the player to the game room
-        System.out.println("User " + playerId + " connected to the server.");
+        System.out.println("[" + new Time(System.currentTimeMillis()).toString() + "]: User " + playerId + " connected to the server.");
         gameRoom.addToRoom(this);
 
         try {
@@ -74,7 +75,7 @@ public class ServerSocketGameThread extends Thread {
             }
         } catch (IOException e) {
             gameRoom.playerDisconnect(this);
-            System.out.println("User " + playerId + " disconnected from the server.");
+            System.out.println("[" + new Time(System.currentTimeMillis()).toString() + "]: User " + playerId + " disconnected from the server.");
         }
     }
 

@@ -6,6 +6,7 @@ import com.badlogic.gdx.utils.Array;
 import net.vaagen.game.controller.LevelLoader;
 import net.vaagen.game.view.WorldRenderer;
 import net.vaagen.game.world.entity.Player;
+import net.vaagen.game.world.projectile.Arrow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,11 +18,19 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class World {
 
     List<Player> playerList;
+    List<Arrow> projectileList;
+    List<Cloud> cloudList;
     /** A world has a level through which Player needs to go through **/
     Level level;
 
     /** The collision boxes **/
     Array<Rectangle> collisionRects = new Array<Rectangle>();
+
+    public World() {
+        createWorld();
+        projectileList = new ArrayList<>();
+        cloudList = new CopyOnWriteArrayList<>();
+    }
 
     public void update() {
         Grass[][][] grasses = level.getGrass();
@@ -36,8 +45,6 @@ public class World {
         }
     }
 
-    // Getters -----------
-
     public Array<Rectangle> getCollisionRects() {
         return collisionRects;
     }
@@ -45,6 +52,7 @@ public class World {
         return level;
     }
 
+    // TODO : Fix this fucking mess
     /** Return only the blocks that need to be drawn **/
     public List<Block> getDrawableBlocks(Player player, int width, int height) {
         int x = (int)player.getPosition().x - width;
@@ -89,8 +97,7 @@ public class World {
         }
         return blocks;
     }
-
-    /** Return only the blocks that need to be drawn **/
+    /** Return only the grass that need to be drawn **/
     public List<Grass> getDrawableGrass(Player player, int width, int height) {
         int x = (int)player.getPosition().x - width;
         int y = (int)player.getPosition().y - height;
@@ -128,9 +135,7 @@ public class World {
         }
         return grasses;
     }
-
-    /** Return only the blocks that need to be drawn **/
-    // TODO : Fix this fucking mess
+    /** Return only the bridges that need to be drawn **/
     public List<Bridge> getDrawableBridges(Player player, int width, int height) {
         int x = (int)player.getPosition().x - width;
         int y = (int)player.getPosition().y - height;
@@ -167,19 +172,11 @@ public class World {
         }
         return bridges;
     }
-
     public List<Grass> getGrassInRange(float x, float y, float range) {
         return getGrassInRangeWithId(x, y, range, -1);
     }
 
-    /**
-     * An ID of -1 can be used to check for grass without any specific id
-     * @param x
-     * @param y
-     * @param range
-     * @param id
-     * @return
-     */
+    /** An ID of -1 can be used to check for grass without any specific id */
     public List<Grass> getGrassInRangeWithId(float x, float y, float range, int id) {
         List<Grass> grassList = new ArrayList<>();
 
@@ -199,11 +196,6 @@ public class World {
         return grassList;
     }
 
-    // --------------------
-    public World() {
-        createWorld();
-    }
-
     public void addPlayer(Player player) {
         playerList.add(player);
         player.respawn(this);
@@ -211,6 +203,14 @@ public class World {
 
     public void removePlayer(Player player) {
         playerList.remove(player);
+    }
+
+    public void addArrow(Arrow arrow) {
+        projectileList.add(arrow);
+    }
+
+    public List<Arrow> getProjectileList() {
+        return projectileList;
     }
 
     public void removePlayerFromId(int id) {
@@ -229,6 +229,14 @@ public class World {
         }
 
         return null;
+    }
+
+    public List<Cloud> getCloudList() {
+        return cloudList;
+    }
+
+    public void addCloud(Cloud cloud) {
+        this.cloudList.add(cloud);
     }
 
     private void createWorld() {

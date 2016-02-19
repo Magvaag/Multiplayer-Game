@@ -1,7 +1,7 @@
 package net.vaagen.multiplayer.server;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by Magnus on 2/10/2016.
@@ -12,7 +12,7 @@ public class ServerGameRoom {
     private int nextId = 0;
 
     public ServerGameRoom() {
-        socketGameThreadList = new ArrayList<>();
+        socketGameThreadList = new CopyOnWriteArrayList<>();
     }
 
     public void addToRoom(ServerSocketGameThread thread) {
@@ -32,8 +32,6 @@ public class ServerGameRoom {
 
             // Add him to the list
             socketGameThreadList.add(thread);
-
-            //System.out.println("Adding user to the game room! with the id " + thread.getPlayerId());
         } else
             System.out.println("User already in game room.");
     }
