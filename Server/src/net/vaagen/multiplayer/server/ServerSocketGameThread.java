@@ -1,9 +1,6 @@
 package net.vaagen.multiplayer.server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.Socket;
 import java.sql.Time;
 
@@ -66,9 +63,11 @@ public class ServerSocketGameThread extends Thread {
         System.out.println("[" + new Time(System.currentTimeMillis()).toString() + "]: User " + playerId + " connected to the server.");
         gameRoom.addToRoom(this);
 
+        // We are now connected and added to the room
         try {
-            while (socket.isConnected()) {
-                BufferedReader inputStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            while (socket.isConnected() && gameRoom.isThreadStillConnected(this)) { // TODO : Is socket closed?
+                InputStreamReader inputStreamReader = new InputStreamReader(socket.getInputStream());
+                BufferedReader inputStream = new BufferedReader(inputStreamReader);
                 String input = inputStream.readLine();
 
                 gameRoom.sendPackageToAll(this, input);

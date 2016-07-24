@@ -36,6 +36,10 @@ public class ServerGameRoom {
             System.out.println("User already in game room.");
     }
 
+    public boolean isThreadStillConnected(ServerSocketGameThread gameThread) {
+        return socketGameThreadList.contains(gameThread);
+    }
+
     public void playerDisconnect(ServerSocketGameThread thread) {
         socketGameThreadList.remove(thread);
         sendPackageToAll(thread, "player-disconnect:{" + thread.getPlayerId() + "}");
@@ -51,10 +55,13 @@ public class ServerGameRoom {
     }
 
     public void sendPackageToAll(ServerSocketGameThread sender, String sPackage) {
+        if (sPackage == null && socketGameThreadList.contains(sender)) {
+            playerDisconnect(sender);
+            return;
+        }
+
         for (ServerSocketGameThread gameThread : socketGameThreadList) {
-            //System.out.println(socketGameThreadList.size());
             if (!sender.equals(gameThread)) {
-                //System.out.println("Sending package!");
                 gameThread.sendPackageToClient(sPackage);
             }
         }
