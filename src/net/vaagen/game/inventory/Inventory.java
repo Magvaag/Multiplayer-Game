@@ -12,7 +12,7 @@ import net.vaagen.game.inventory.item.Items;
 public class Inventory {
 
     private Slot arrowSlot;
-    private float arrowSlotX = -9.5F, arrowSlotY = -5;
+    private float arrowSlotX = -9.5F, arrowSlotY = -5.3F;
 
     public Inventory() {
         arrowSlot = new Slot(Items.itemArrow, 20);

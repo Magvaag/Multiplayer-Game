@@ -1,5 +1,6 @@
 package net.vaagen.game.chat;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -10,6 +11,10 @@ import net.vaagen.game.world.entity.Player;
 
 import java.util.*;
 
+import static com.badlogic.gdx.graphics.GL20.GL_BLEND;
+import static com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA;
+import static com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA;
+
 /**
  * Created by Magnus on 7/17/16.
  */
@@ -18,7 +23,7 @@ public class Chat {
     private static final String COMMAND_STARTS_WITH = "/";
 
     private Font font;
-    private float chatPosX = -9.5F, chatPosY = -4;
+    private float chatPosX = -9.5F, chatPosY = -3.8F;
     private final float SIZE = 0.4F;
     private long textLength = 15000L;
     private long typingCursorLength = 500L;
@@ -31,7 +36,7 @@ public class Chat {
     private List<ChatMessage> chatMessageRender = new ArrayList<>();
 
     public Chat(){
-        font = new Font();
+        font = Font.font_2;
         CommandManager.registerCommands();
     }
 
@@ -65,10 +70,13 @@ public class Chat {
     }
 
     public void drawChatText(SpriteBatch spriteBatch, ShapeRenderer shapeRenderer, String text, int h) {
+        Gdx.gl.glEnable(GL_BLEND);
+        Gdx.gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(new Color(0, 0, 0, 0.9F));
+        shapeRenderer.setColor(new Color(0, 0, 0, 0.2F));
         shapeRenderer.rect(chatPosX + Game.gameScreen.getRenderer().getCameraXForPlayer(Game.gameScreen.getPlayer()), h * SIZE + chatPosY + Game.gameScreen.getRenderer().getCameraYForPlayer(Game.gameScreen.getPlayer()), text.length() * (SIZE - 0.06F) + (h == -1 ? SIZE : 0), SIZE);
         shapeRenderer.end();
+        Gdx.gl.glDisable(GL_BLEND);
 
         renderText(spriteBatch, text, getChatPosX(), getChatPosY(h), SIZE, SIZE);
     }

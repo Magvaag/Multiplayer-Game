@@ -18,6 +18,11 @@ import net.vaagen.game.screens.GameScreen;
 import net.vaagen.game.world.*;
 import net.vaagen.game.world.entity.Player;
 import net.vaagen.game.world.projectile.Arrow;
+import org.lwjgl.opengl.GL12;
+
+import static com.badlogic.gdx.graphics.GL20.GL_BLEND;
+import static com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA;
+import static com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA;
 
 /**
  * Created by Magnus on 10/15/2015.
@@ -106,8 +111,8 @@ public class WorldRenderer {
 
     private void drawGrass() {
         Gdx.gl20.glEnable(GL20.GL_TEXTURE_2D);
-        Gdx.gl20.glEnable(GL20.GL_BLEND);
-        Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Gdx.gl20.glEnable(GL_BLEND);
+        Gdx.gl20.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         for (Grass grass : world.getDrawableGrass(Game.gameScreen.getPlayer(), (int)CAMERA_WIDTH, (int)CAMERA_HEIGHT))
             grass.render(spriteBatch);
