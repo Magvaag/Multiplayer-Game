@@ -146,6 +146,22 @@ public class Grass {
         this.rotationVelocity += angularVelocity;
     }
 
+    public static void applyMovementToGrass(World world, float x, float y, float vX, float vY, float range, float effect) {
+        List<Grass> grassList = world.getGrassInRange(x, y, range);
+        for (Grass grass : grassList) {
+            float dx = x - grass.getPosition().x + Block.SIZE / 2;
+            float dy = y - grass.getPosition().y;
+
+            float distance = (float) Math.sqrt(dx * dx + dy * dy);
+            float dDistance = range - distance;
+            if (dDistance < 0)
+                continue;
+
+            float appliedVelocity = (vX + vY) * effect;
+            grass.applyAngularVelocity(-appliedVelocity / 50 * dDistance);
+        }
+    }
+
     private void flush(SpriteBatch spriteBatch) {
         if (currentVertex == 0)
             return;

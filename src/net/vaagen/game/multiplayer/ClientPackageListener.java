@@ -28,7 +28,7 @@ public class ClientPackageListener extends Thread {
 
                 client.readPackage(sPackage);
             } catch (IOException e) {
-                client.disconnect();
+                client.disconnectFromServer();
             }
         }
     }

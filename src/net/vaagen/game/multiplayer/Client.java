@@ -1,7 +1,9 @@
 package net.vaagen.game.multiplayer;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.Game;
+import net.vaagen.game.chat.Chat;
 import net.vaagen.game.world.entity.Player;
 
 import java.io.IOException;
@@ -13,33 +15,67 @@ import java.net.Socket;
  */
 public class Client {
 
+    public static final int DEFAULT_PORT = 50001;
+
     private Socket socket;
+    private Thread serverConnectionThread;
+    private Chat chat;
     private boolean hasReceivedId;
     private long lastMovePackage;
+    private String serverIp;
+    private int serverPort;
 
     public Client(String serverIp, int serverPort) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    System.out.println("Connecting to \"" + serverIp + ":" + serverPort + "\"..");
-                    socket = new Socket(serverIp, serverPort);
+        chat = new Chat();
+        chat.addText("Press T/Enter to chat!");
 
-                    // We need to listen for incoming packages
-                    if (socket != null && socket.isConnected())
-                        new ClientPackageListener(Client.this, socket);
-                } catch (IOException e) {
-                    //e.printStackTrace();
-                    // This exception is printed out prettier out below
-                } finally {
-                    if (socket != null && socket.isConnected())
-                        System.out.println("Connection established on to \"" + serverIp + ":" + serverPort + "\"!");
-                    else
-                        System.out.println("Unable to connect to Game Server, playing offline.");
-                    System.out.println();
-                }
+        connectToServer(serverIp, serverPort);
+    }
+
+    public void disconnectFromServer() {
+        if (serverConnectionThread != null) {
+            try { serverConnectionThread.join();
+            } catch (InterruptedException e) { e.printStackTrace(); }
+            serverConnectionThread = null;
+        }
+
+        socket = null;
+        getChat().addText("Disconnected from server.");
+    }
+
+    public boolean isConnected() {
+        return (serverConnectionThread != null && serverConnectionThread.isAlive()) || socket != null;
+    }
+
+    public void connectToServer(String serverIp, int serverPort) {
+        // Try to disconnect from the server if we are already connected
+        if (isConnected())
+            disconnectFromServer();
+
+        this.serverIp = serverIp;
+        this.serverPort = serverPort;
+
+        serverConnectionThread = new Thread(() -> {
+            try {
+
+                System.out.println("Connecting to \"" + serverIp + ":" + serverPort + "\" ...");
+                socket = new Socket(serverIp, serverPort);
+
+                // We need to listen for incoming packages
+                if (socket != null && socket.isConnected())
+                    new ClientPackageListener(Client.this, socket);
+            } catch (IOException e) {
+                //e.printStackTrace();
+                // This exception is printed out prettier below
+            } finally {
+                if (socket != null && socket.isConnected())
+                    getChat().addText("Connection established to \"" + serverIp + ":" + serverPort + "\"!");
+                else
+                    getChat().addText("Unable to connect to game server, playing offline.");
             }
-        }).start();
+        });
+
+        serverConnectionThread.start();
     }
 
     public void sendPackage(String input) {
@@ -63,11 +99,6 @@ public class Client {
         Player player = Game.gameScreen.getPlayer();
         sendPackage("player-info:{" + player.getPlayerId() + "," + player.getPosition().x + "," + player.getPosition().y + "," + player.getVelocity().x + "," + player.getVelocity().y + "," + player.getState().ordinal() + "," + player.isFacingLeft() + "}");
         lastMovePackage = System.currentTimeMillis();
-    }
-
-    public void disconnect() {
-        // The server is probably unreachable at this point, so no need to ask it anything
-        socket = null;
     }
 
     public void readPackage(String sPackage) {
@@ -112,5 +143,9 @@ public class Client {
             e.printStackTrace();
             System.out.println("Error reading package: " + sPackage);
         }
+    }
+
+    public Chat getChat() {
+        return chat;
     }
 }

@@ -1,16 +1,25 @@
 package net.vaagen.game.world.entity;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import net.vaagen.game.Game;
 import net.vaagen.game.controller.PlayerController;
+import net.vaagen.game.inventory.Inventory;
+import net.vaagen.game.inventory.item.Item;
+import net.vaagen.game.inventory.item.ItemArrow;
+import net.vaagen.game.inventory.item.Items;
 import net.vaagen.game.view.WorldRenderer;
 import net.vaagen.game.world.Block;
 import net.vaagen.game.world.Grass;
 import net.vaagen.game.world.World;
+import net.vaagen.game.world.projectile.Arrow;
 
 import java.util.List;
 
@@ -24,6 +33,7 @@ public class Player {
     }
 
     public static final float SIZE = 0.8F; // half a unit
+    public static final float PICKUP_RADIUS = 1F;
 
     /** Textures **/
     private static TextureRegion idleLeft;
@@ -42,6 +52,7 @@ public class Player {
     private static Animation fallLeftAnimation;
 
     World       world;
+    Inventory   inventory;
     Vector2     position = new Vector2();
     Vector2 	acceleration = new Vector2();
     Vector2 	velocity = new Vector2();
@@ -59,6 +70,7 @@ public class Player {
         this.bounds.y = position.y;
         this.bounds.height = SIZE - 1/16F;
         this.bounds.width = SIZE / 2;
+        this.inventory = new Inventory();
 
         setFacingLeft(false);
     }
@@ -195,8 +207,7 @@ public class Player {
     }
     public void setPosition(Vector2 position) {
         this.position = position;
-        this.bounds.setX(position.x);
-        this.bounds.setY(position.y);
+        updateBounds();
     }
     public void setAcceleration(Vector2 acceleration) {
         this.acceleration = acceleration;
@@ -239,23 +250,39 @@ public class Player {
         } else
             frame = isFacingLeft() ? idleLeft : idleRight;
 
-        spriteBatch.draw(frame, getPosition().x, getPosition().y, Player.SIZE, Player.SIZE);
-        spriteBatch.draw(frame, getPosition().x, getPosition().y + world.getLevel().getHeight(), Player.SIZE, Player.SIZE);
-        spriteBatch.draw(frame, getPosition().x, getPosition().y - world.getLevel().getHeight(), Player.SIZE, Player.SIZE);
+        spriteBatch.draw(frame, getPosition().x-SIZE/2, getPosition().y, Player.SIZE, Player.SIZE);
+        spriteBatch.draw(frame, getPosition().x-SIZE/2, getPosition().y + world.getLevel().getHeight(), Player.SIZE, Player.SIZE);
+        spriteBatch.draw(frame, getPosition().x-SIZE/2, getPosition().y - world.getLevel().getHeight(), Player.SIZE, Player.SIZE);
+    }
+
+    public void renderDebug(ShapeRenderer debugRenderer) {
+        // render Player
+        Player player = Game.gameScreen.getPlayer();
+        Rectangle rect = player.getBounds();
+        debugRenderer.setColor(new Color(0, 1, 0, 1));
+        debugRenderer.rect(rect.x, rect.y, rect.width, rect.height);
+        Rectangle circle = getPickupCircle();
+        debugRenderer.setColor(Color.YELLOW);
+        debugRenderer.rect(circle.x, circle.y, circle.width, circle.height);
     }
 
     public void updateBounds() {
 		bounds.y = position.y;
 
         if (getState().equals(State.SLIDING)) {
-            bounds.x = position.x;
+            bounds.x = position.x-SIZE/2;
             bounds.width = SIZE;
             bounds.height = SIZE / 2;
         } else {
-            bounds.x = position.x + (1 - SIZE);
+            bounds.x = position.x + (1 - SIZE)-SIZE/2;
             bounds.width = SIZE / 2;
             bounds.height = SIZE;
         }
+    }
+
+    public Rectangle getPickupCircle() {
+        Rectangle rectangle = new Rectangle(getPosition().x - PICKUP_RADIUS/2, getPosition().y + getBounds().height/2 - PICKUP_RADIUS / 2, PICKUP_RADIUS, PICKUP_RADIUS);
+        return rectangle;
     }
 
     public int getPlayerId() {
@@ -267,20 +294,38 @@ public class Player {
         if (getState().equals(State.WALL_SLIDE))
             wallSlideTime += delta;
 
-        float range = 1.5F;
-        List<Grass> grassList = world.getGrassInRange(getPosition().x, getPosition().y, range);
-        for (Grass grass : grassList) {
-            float dx = getPosition().x - grass.getPosition().x + Block.SIZE / 2;
-            float dy = getPosition().y - grass.getPosition().y;
-
-            float distance = (float) Math.sqrt(dx * dx + dy * dy);
-            float dDistance = range - distance;
-            if (dDistance < 0)
+        Rectangle rectangle = getPickupCircle();
+        for (Arrow arrow : world.getProjectileList()) {
+            if (arrow.isDead() || !arrow.hasCollided())
                 continue;
+            boolean collision = arrow.getBounds().contains(rectangle.getX(), rectangle.getY()) || arrow.getBounds().contains(rectangle.getX() + rectangle.getWidth(), rectangle.getY()) || arrow.getBounds().contains(rectangle.getX() + rectangle.getWidth(), rectangle.getY() + rectangle.getHeight()) || arrow.getBounds().contains(rectangle.getX(), rectangle.getY() + rectangle.getHeight());
 
-            float appliedVelocity = getVelocity().x + getVelocity().y;
-            grass.applyAngularVelocity(-appliedVelocity / 50 * dDistance);
+            float[] vertices = arrow.getBounds().getTransformedVertices();
+            for (int v = 0; v < vertices.length; v += 2) {
+                if (rectangle.contains(vertices[v], vertices[v + 1])) {
+                    collision = true;
+                    break;
+                }
+            }
+
+            if (collision) {
+                pickupItem(Items.itemArrow);
+                arrow.setDead(true);
+            }
         }
+
+        Grass.applyMovementToGrass(world, getPosition().x, getPosition().y, getVelocity().x, getVelocity().y, 1.5F, 1);
     }
 
+    public void pickupItem(Item item) {
+        getInventory().pickupItem(item);
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public Inventory getInventory() {
+        return inventory;
+    }
 }

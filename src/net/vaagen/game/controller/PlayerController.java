@@ -21,7 +21,14 @@ import java.util.*;
 public class PlayerController {
 
     public enum Keys {
-        LEFT(Input.Keys.LEFT, Input.Keys.A), RIGHT(Input.Keys.RIGHT, Input.Keys.D), JUMP(Input.Keys.SPACE, Input.Keys.UP, Input.Keys.W), SLIDE(Input.Keys.DOWN, Input.Keys.S), FIRE(Input.Keys.Z), DEBUG(Input.Keys.R);
+        LEFT(Input.Keys.LEFT, Input.Keys.A),
+        RIGHT(Input.Keys.RIGHT, Input.Keys.D),
+        JUMP(Input.Keys.SPACE, Input.Keys.UP, Input.Keys.W),
+        SLIDE(Input.Keys.DOWN, Input.Keys.S), FIRE(Input.Keys.Z),
+        DEBUG(Input.Keys.R),
+        CHAT_START(Input.Keys.ENTER, Input.Keys.T),
+        CHAT_END(Input.Keys.ESCAPE),
+        CHAT_SEND(Input.Keys.ENTER);
 
         private List<Integer> inputKey;
         Keys(Integer... inputKey) {
@@ -66,11 +73,8 @@ public class PlayerController {
 
     static Map<Keys, Boolean> keys = new HashMap();
     static {
-        keys.put(Keys.LEFT, false);
-        keys.put(Keys.RIGHT, false);
-        keys.put(Keys.JUMP, false);
-        keys.put(Keys.SLIDE, false);
-        keys.put(Keys.FIRE, false);
+        for (Keys key : Keys.values())
+            keys.put(key, false);
     }
 
     // Blocks that Player can collide with any given frame
@@ -84,37 +88,11 @@ public class PlayerController {
 
     // ** Key presses and touches **************** //
 
-    public void leftPressed() {
-        keys.get(keys.put(Keys.LEFT, true));
+    public void keyPressed(Keys key) {
+        keys.put(key, true);
     }
-    public void rightPressed() {
-        keys.get(keys.put(Keys.RIGHT, true));
-    }
-    public void jumpPressed() {
-        keys.get(keys.put(Keys.JUMP, true));
-    }
-    public void slidePressed() {
-        keys.get(keys.put(Keys.SLIDE, true));
-    }
-    public void firePressed() {
-        keys.get(keys.put(Keys.FIRE, true));
-    }
-
-    public void leftReleased() {
-        keys.get(keys.put(Keys.LEFT, false));
-    }
-    public void rightReleased() {
-        keys.get(keys.put(Keys.RIGHT, false));
-    }
-    public void jumpReleased() {
-        keys.get(keys.put(Keys.JUMP, false));
-        jumpingPressed = false;
-    }
-    public void slideReleased() {
-        keys.get(keys.put(Keys.SLIDE, false));
-    }
-    public void fireReleased() {
-        keys.get(keys.put(Keys.FIRE, false));
+    public void keyReleased(Keys key) {
+        keys.put(key, false);
     }
 
     /** The main update method **/
@@ -361,10 +339,24 @@ public class PlayerController {
 
     /** Change Player's state and parameters based on input controls **/
     private boolean processInput() {
+        if (keys.get(Keys.CHAT_START) && !Game.gameScreen.getClient().getChat().isTyping())
+                Game.gameScreen.getClient().getChat().setTyping();
+        else if (keys.get(Keys.CHAT_END) && Game.gameScreen.getClient().getChat().isTyping())
+            Game.gameScreen.getClient().getChat().cancelTyping();
+        else if (keys.get(Keys.CHAT_SEND) && Game.gameScreen.getClient().getChat().isTyping())
+            Game.gameScreen.getClient().getChat().sendMessage(getPlayer());
+
+        keyReleased(Keys.CHAT_START);
+        keyReleased(Keys.CHAT_END);
+        keyReleased(Keys.CHAT_SEND);
+
         boolean activeInput = false; // If we actually did anything
         if (keys.get(Keys.FIRE)) {
-            world.addArrow(new Arrow(player.getPlayerId(), player.getPosition().cpy().add((player.isFacingLeft() ? 0 : player.getBounds().width), 0), new Vector2((player.isFacingLeft() ? -1 : 1) * 40, 1F)));
-            fireReleased();
+            if (player.getInventory().getArrowSlot().getAmount() > 0) {
+                world.addArrow(new Arrow(player, player.getPosition().cpy().add((player.isFacingLeft() ? 0 : player.getBounds().width), 0), new Vector2((player.isFacingLeft() ? -1 : 1) * 40, 1F)));
+                player.getInventory().getArrowSlot().addAmount(-1);
+            }
+            keyReleased(Keys.FIRE);
         }
 
         boolean onGroundReadyToJump = (grounded || jumpingPressed);
@@ -400,7 +392,7 @@ public class PlayerController {
             }
 
             if (wallSliding)
-                jumpReleased();
+                keyReleased(Keys.JUMP);
 
             activeInput = true;
         }
@@ -431,7 +423,7 @@ public class PlayerController {
                         player.setState(Player.State.WALL_SLIDE);
 
                         // Make sure the player is not already jumping
-                        jumpReleased();
+                        keyReleased(Keys.JUMP);
                     } else if (!player.getState().equals(Player.State.JUMPING)) {
                         player.setFacingLeft(true);
                         player.setState(Player.State.WALKING);
@@ -465,7 +457,7 @@ public class PlayerController {
                         player.setState(Player.State.WALL_SLIDE);
 
                         // Make sure the player is not already jumping
-                        jumpReleased();
+                        keyReleased(Keys.JUMP);
                     } else if (!player.getState().equals(Player.State.JUMPING)) {
                         player.setFacingLeft(false);
                         player.setState(Player.State.WALKING);

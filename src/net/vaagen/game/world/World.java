@@ -43,6 +43,13 @@ public class World {
                 }
             }
         }
+
+        List<Arrow> deadArrows = new ArrayList<>();
+        for (Arrow arrow : getProjectileList())
+            if (arrow.isDead())
+                deadArrows.add(arrow);
+        for (Arrow arrow : deadArrows)
+            projectileList.remove(arrow);
     }
 
     public Array<Rectangle> getCollisionRects() {

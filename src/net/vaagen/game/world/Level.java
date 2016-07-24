@@ -1,7 +1,9 @@
 package net.vaagen.game.world;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,7 +16,7 @@ public class Level {
     private Block[][] blocks;
     private Grass[][][] grass;
     private Bridge[][] bridges;
-    private Vector2 spanPosition;
+    private Vector2 spawnPosition;
 
     public int getWidth() {
         return width;
@@ -76,11 +78,42 @@ public class Level {
     }
 
     public Vector2 getSpawnPosition() {
-        return spanPosition;
+        return spawnPosition;
+    }
+
+    public List<Rectangle> getBlockRectangles() {
+        List<Rectangle> rectangles = new ArrayList<>();
+
+        for (int x = 0; x < blocks.length; x++)
+            for (int y = 0; y < blocks[0].length; y++)
+                if (blocks[x][y] != null)
+                    rectangles.add(blocks[x][y].getBounds());
+
+        return rectangles;
+    }
+
+    public List<Rectangle> getBridgeRectangles() {
+        List<Rectangle> rectangles = new ArrayList<>();
+
+        for (int x = 0; x < bridges.length; x++)
+            for (int y = 0; y < bridges[0].length; y++)
+                if (bridges[x][y] != null)
+                    rectangles.add(bridges[x][y].getBounds());
+
+        return rectangles;
+    }
+
+    public List<Rectangle> getCollisionRectangles() {
+        List<Rectangle> rectangles = new ArrayList<>();
+
+        rectangles.addAll(getBlockRectangles());
+        rectangles.addAll(getBridgeRectangles());
+
+        return rectangles;
     }
 
     public void setSpawnPosition(Vector2 spanPosition) {
-        this.spanPosition = spanPosition;
+        this.spawnPosition = spanPosition;
     }
 
 }

@@ -2,12 +2,8 @@ package net.vaagen.game.screens;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import net.vaagen.game.*;
 import net.vaagen.game.Game;
 import net.vaagen.game.controller.PlayerController;
 import net.vaagen.game.multiplayer.Client;
@@ -39,7 +35,7 @@ public class GameScreen implements Screen, InputProcessor {
         controller = new PlayerController(world);
         renderer = new WorldRenderer(world, false);
         Gdx.input.setInputProcessor(this);
-        client = new Client("137.117.248.37", 50001); // 137.117.248.37 -> scratchforfun.net // 25.141.152.199 -> Hamatchi // 127.0.0.1 -> Localhost
+        client = new Client("127.0.0.1", 50001); // 137.117.248.37 -> scratchforfun.net // 25.141.152.199 -> Hamatchi // 127.0.0.1 -> Localhost
         shapeRenderer = new ShapeRenderer();
 
         backgroundBottom = new Color(0.88627F, 0.945098F, 0.6117647F, 1F);
@@ -57,11 +53,11 @@ public class GameScreen implements Screen, InputProcessor {
                     reachedEnd = true;
                 }
             }
-            nextCloud += new Random().nextFloat()*delta;
-            int amountOfClouds = (int)(nextCloud / 10F);
+            nextCloud += new Random().nextFloat() * delta;
+            int amountOfClouds = (int) (nextCloud / 10F);
             for (int c = 0; c < amountOfClouds; c++) {
                 nextCloud -= 10;
-                world.addCloud(new Cloud(new Vector2(-4, new Random().nextFloat() * Game.gameScreen.getWorld().getLevel().getHeight()), new Vector2(0.04F + new Random().nextFloat() * 0.2F, (new Random().nextFloat()-0.5F) * 0.01F)));
+                world.addCloud(new Cloud(new Vector2(-4, new Random().nextFloat() * Game.gameScreen.getWorld().getLevel().getHeight()), new Vector2(0.04F + new Random().nextFloat() * 0.2F, (new Random().nextFloat() - 0.5F) * 0.01F)));
             }
         }
     }
@@ -78,7 +74,7 @@ public class GameScreen implements Screen, InputProcessor {
         shapeRenderer.end();
 
         // Just setting the lowest fps possible, just to make sure the user doesn't clip through the ground / other objects
-        if (delta > 1F/20)
+        if (delta > 1F / 20)
             delta = 1F / 20;
 
         controller.update(delta);
@@ -117,40 +113,36 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
-        if (PlayerController.Keys.LEFT.getInputKey().contains(keycode))
-            controller.leftPressed();
-        if (PlayerController.Keys.RIGHT.getInputKey().contains(keycode))
-            controller.rightPressed();
-        if (PlayerController.Keys.JUMP.getInputKey().contains(keycode))
-            controller.jumpPressed();
-        if (PlayerController.Keys.SLIDE.getInputKey().contains(keycode))
-            controller.slidePressed();
-        if (PlayerController.Keys.FIRE.getInputKey().contains(keycode))
-            controller.firePressed();
+        if (client.getChat().isTyping() && !(PlayerController.Keys.CHAT_START.getInputKey().contains(keycode) || PlayerController.Keys.CHAT_END.getInputKey().contains(keycode)))
+            return true;
+
+        for (PlayerController.Keys key : PlayerController.Keys.values()) {
+            if (key.getInputKey().contains(keycode))
+                controller.keyPressed(key);
+        }
         return true;
     }
 
     @Override
     public boolean keyUp(int keycode) {
-        if (PlayerController.Keys.LEFT.getInputKey().contains(keycode))
-            controller.leftReleased();
-        if (PlayerController.Keys.RIGHT.getInputKey().contains(keycode))
-            controller.rightReleased();
-        if (PlayerController.Keys.JUMP.getInputKey().contains(keycode))
-            controller.jumpReleased();
-        if (PlayerController.Keys.SLIDE.getInputKey().contains(keycode))
-            controller.slideReleased();
-        if (PlayerController.Keys.FIRE.getInputKey().contains(keycode))
-            controller.fireReleased();
-        if (PlayerController.Keys.DEBUG.getInputKey().contains(keycode))
+        for (PlayerController.Keys key : PlayerController.Keys.values()) {
+            if (key.getInputKey().contains(keycode))
+                controller.keyReleased(key);
+        }
+
+        if (!client.getChat().isTyping() && PlayerController.Keys.DEBUG.getInputKey().contains(keycode))
             renderer.setDebug(!renderer.isDebug());
         return true;
     }
 
     @Override
     public boolean keyTyped(char character) {
-        // TODO Auto-generated method stub
-        return false;
+        if (client.getChat().isTyping() && !PlayerController.Keys.CHAT_START.getInputKey().contains(character)) {
+            client.getChat().type(character);
+            return true;
+        }
+
+        return true;
     }
 
     @Override
@@ -158,10 +150,10 @@ public class GameScreen implements Screen, InputProcessor {
         if (!Gdx.app.getType().equals(Application.ApplicationType.Android))
             return false;
         if (x < width / 2 && y > height / 2) {
-            controller.leftPressed();
+            controller.keyPressed(PlayerController.Keys.LEFT);
         }
         if (x > width / 2 && y > height / 2) {
-            controller.rightPressed();
+            controller.keyPressed(PlayerController.Keys.RIGHT);
         }
         return true;
     }
@@ -171,10 +163,10 @@ public class GameScreen implements Screen, InputProcessor {
         if (!Gdx.app.getType().equals(Application.ApplicationType.Android))
             return false;
         if (x < width / 2 && y > height / 2) {
-            controller.leftReleased();
+            controller.keyReleased(PlayerController.Keys.LEFT);
         }
         if (x > width / 2 && y > height / 2) {
-            controller.rightReleased();
+            controller.keyReleased(PlayerController.Keys.RIGHT);
         }
         return true;
     }
@@ -212,4 +204,9 @@ public class GameScreen implements Screen, InputProcessor {
     public World getWorld() {
         return world;
     }
+
+    public WorldRenderer getRenderer() {
+        return renderer;
+    }
+
 }

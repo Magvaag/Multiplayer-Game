@@ -10,9 +10,11 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import net.vaagen.game.Game;
+import net.vaagen.game.screens.GameScreen;
 import net.vaagen.game.world.*;
 import net.vaagen.game.world.entity.Player;
 import net.vaagen.game.world.projectile.Arrow;
@@ -23,8 +25,10 @@ import net.vaagen.game.world.projectile.Arrow;
 public class WorldRenderer {
 
     private static float ZOOM = 1.5F;
-    public static final float CAMERA_WIDTH = 1280F / 100 * ZOOM;
-    public static final float CAMERA_HEIGHT = 720F / 100 * ZOOM;
+    public static final float SCREEN_WIDTH = 1280F;
+    public static final float SCREEN_HEIGHT = 720F;
+    public static final float CAMERA_WIDTH = SCREEN_WIDTH / 100 * ZOOM;
+    public static final float CAMERA_HEIGHT = SCREEN_HEIGHT / 100 * ZOOM;
     private static final float RUNNING_FRAME_DURATION = 0.06f;
 
     private World world;
@@ -72,11 +76,19 @@ public class WorldRenderer {
         drawBridges();
         drawArrows();
         spriteBatch.end();
+        debugRenderer.setProjectionMatrix(cam.combined);
+        drawChat();
         drawCollisionBlocks();
 
         drawGrass();
         if (debug)
             drawDebug();
+
+        Game.gameScreen.getPlayer().getInventory().render(spriteBatch);
+    }
+
+    private void drawChat() {
+        Game.gameScreen.getClient().getChat().render(spriteBatch, debugRenderer);
     }
 
     private void drawBlocks() {
@@ -120,16 +132,25 @@ public class WorldRenderer {
         // render blocks
         debugRenderer.setProjectionMatrix(cam.combined);
         debugRenderer.begin(ShapeType.Line);
+        debugRenderer.setColor(new Color(1, 0, 0, 1));
         for (Block block : world.getDrawableBlocks(Game.gameScreen.getPlayer(), (int)CAMERA_WIDTH, (int)CAMERA_HEIGHT)) {
             Rectangle rect = block.getBounds();
-            debugRenderer.setColor(new Color(1, 0, 0, 1));
             debugRenderer.rect(rect.x, rect.y, rect.width, rect.height);
         }
-        // render Player
-        Player player = Game.gameScreen.getPlayer();
-        Rectangle rect = player.getBounds();
-        debugRenderer.setColor(new Color(0, 1, 0, 1));
-        debugRenderer.rect(rect.x, rect.y, rect.width, rect.height);
+        debugRenderer.setColor(Color.BLUE);
+        for (Rectangle rect : world.getLevel().getBridgeRectangles()) {
+            debugRenderer.rect(rect.x, rect.y, rect.width, rect.height);
+        }
+
+        debugRenderer.setColor(Color.YELLOW);
+        for (Arrow arrow : world.getProjectileList()) {
+            Polygon rect = arrow.getBounds();
+            // TODO : The arrow texture is not parallel
+            debugRenderer.polygon(rect.getTransformedVertices());
+            //debugRenderer.rect(rect., rect.y, arrow.getCenterOfMass().x, arrow.getCenterOfMass().y, rect.width, rect.height, 1, 1, (float) Math.toDegrees(arrow.getRotation()) % 360);
+        }
+        // Player debug
+        Game.gameScreen.getPlayer().renderDebug(debugRenderer);
         debugRenderer.end();
     }
 
