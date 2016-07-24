@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import net.vaagen.game.Game;
 import net.vaagen.game.chat.commands.CommandManager;
+import net.vaagen.game.multiplayer.ChatPackage;
 import net.vaagen.game.world.entity.Player;
 
 import java.util.*;
@@ -102,7 +103,7 @@ public class Chat {
     }
 
     public void addText(Player player, String text, long date) {
-        chatMessageRender.add(new ChatMessage(player, text, date));
+        addText(new ChatMessage(player, text, date));
     }
 
     public void addText(Player player, String text) {
@@ -111,6 +112,15 @@ public class Chat {
 
     public void addText(String text) {
         addText(null, text);
+    }
+
+    public void addText(ChatMessage chatMessage) {
+        printText(chatMessage);
+    }
+
+    public void printText(ChatMessage chatMessage) {
+        System.out.println("[Chat]: " + chatMessage.getMessage());
+        chatMessageRender.add(chatMessage);
     }
 
     public void setTyping() {
@@ -138,8 +148,12 @@ public class Chat {
     }
 
     public void sendMessage(Player player) {
-        System.out.println("[Chat]: " + getTyping());
-        addText(player, getTyping(), System.currentTimeMillis());
+        // Get the chat message
+        ChatMessage chatMessage = new ChatMessage(player, getTyping(), System.currentTimeMillis());
+        // Print out the message
+        addText(chatMessage);
+
+        // Check if this is a command
         if (getTyping().startsWith(COMMAND_STARTS_WITH)) {
             String typing = getTyping();
             String[] split = typing.split(" ");
@@ -148,8 +162,11 @@ public class Chat {
             // Execute the command
             CommandManager.executeCommand(command, arguments);
         } else {
-            // TODO : Send as package as well
+            // If this is not a command, send a message to the rest of the players
+            Game.gameScreen.getClient().sendPackage(new ChatPackage(chatMessage));
         }
+
+        // Stop typing
         cancelTyping();
     }
 
@@ -160,7 +177,7 @@ public class Chat {
         return this.text;
     }
 
-    public class ChatMessage {
+    public static class ChatMessage {
 
         private Player sender;
         private String message;

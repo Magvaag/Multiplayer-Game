@@ -78,7 +78,11 @@ public class Client {
         serverConnectionThread.start();
     }
 
-    public void sendPackage(String input) {
+    public void sendPackage(Package pack) {
+        sendPackage(pack.encode());
+    }
+
+    private void sendPackage(String input) {
         if (socket == null || !socket.isConnected())
             return;
 
@@ -113,32 +117,37 @@ public class Client {
             String action = args[0];
             String[] values = args[1].replace("{", "").replace("}", "").split(",");
 
-            if (action.equals("add-player")) {
-                Player player = new Player();
-                player.setPlayerId(Integer.parseInt(values[0]));
-                Game.gameScreen.getWorld().addPlayer(player);
-            } else if (action.equals("player-info")) {
-                Player player = Game.gameScreen.getWorld().getPlayerFromId(Integer.parseInt(values[0]));
-                player.setPosition(new Vector2(Float.parseFloat(values[1]), Float.parseFloat(values[2])));
-                player.setVelocity(new Vector2(Float.parseFloat(values[3]), Float.parseFloat(values[4])));
-                player.setState(Player.State.values()[Integer.parseInt(values[5])]);
-                player.setFacingLeft(Boolean.parseBoolean(values[6]));
-            } else if (action.equals("your-id")) {
-                Game.gameScreen.getPlayer().setPlayerId(Integer.parseInt(values[0]));
-                hasReceivedId = true;
+            Package p = PackageManager.getPackageForKeyword(action);
+            if (p != null) {
+                p.decode(sPackage);
+            } else {
+                if (action.equals("add-player")) {
+                    Player player = new Player();
+                    player.setPlayerId(Integer.parseInt(values[0]));
+                    Game.gameScreen.getWorld().addPlayer(player);
+                } else if (action.equals("player-info")) {
+                    Player player = Game.gameScreen.getWorld().getPlayerFromId(Integer.parseInt(values[0]));
+                    player.setPosition(new Vector2(Float.parseFloat(values[1]), Float.parseFloat(values[2])));
+                    player.setVelocity(new Vector2(Float.parseFloat(values[3]), Float.parseFloat(values[4])));
+                    player.setState(Player.State.values()[Integer.parseInt(values[5])]);
+                    player.setFacingLeft(Boolean.parseBoolean(values[6]));
+                } else if (action.equals("your-id")) {
+                    Game.gameScreen.getPlayer().setPlayerId(Integer.parseInt(values[0]));
+                    hasReceivedId = true;
 
-                try {
-                    PrintStream inputStream = new PrintStream(socket.getOutputStream());
-                    inputStream.println("I have received my id!");
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    try {
+                        PrintStream inputStream = new PrintStream(socket.getOutputStream());
+                        inputStream.println("I have received my id!");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else if (action.equals("player-disconnect")) {
+                    Game.gameScreen.getWorld().removePlayerFromId(Integer.parseInt(values[0]));
+                } else if (action.equals("get-player-info")) {
+                    sendUpdatePackage();
                 }
-            } else if (action.equals("player-disconnect")) {
-                Game.gameScreen.getWorld().removePlayerFromId(Integer.parseInt(values[0]));
-            } else if (action.equals("get-player-info")) {
-                sendUpdatePackage();
+                //System.out.println("Package received! " + sPackage);
             }
-            //System.out.println("Package received! " + sPackage);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error reading package: " + sPackage);
